@@ -1,0 +1,17 @@
+:root {
+  color-scheme: only light;
+}
+
+.react-datepicker-popper {
+  z-index: 1021;
+  line-height: 0;
+}
+
+.red-nav-item {
+  background-color: red; /* Red background */
+  color: white; /* White text for better contrast */
+}
+
+.red-nav-item:hover {
+  background-color: darkred; /* Darker red on hover */
+}

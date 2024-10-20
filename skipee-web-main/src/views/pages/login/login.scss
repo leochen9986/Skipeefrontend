@@ -1,0 +1,80 @@
+@import 'src/scss/style.scss';
+
+.login-container {
+  display: flex;
+  background-color: #d9d9d9;
+}
+
+.heading-text {
+  @extend .fira-sans-semibold;
+  @extend .text-black;
+  font-size: 33px;
+}
+
+.welcome-text {
+  @extend .fira-sans-semibold;
+  @extend .text-black;
+}
+
+.input-lbl {
+  @extend .fira-sans-semibold;
+  @extend .text-black;
+  @extend .text-start;
+  font-size: 26px;
+}
+
+.forgot-password {
+  @extend .fira-sans-extrabold;
+  @extend .text-start;
+  font-size: 20px;
+  color: #1eb953;
+}
+
+.input-comp {
+  @extend .fira-sans-extrabold;
+  @extend .shadow-none;
+  height: 63px;
+  font-size: 20px;
+}
+
+.signin-btn {
+  @extend .fira-sans-extrabold;
+  font-size: 22px;
+  background-color: #1eb953;
+  color: white;
+  height: 56px;
+  border-width: 0px;
+  border-radius: 5px;
+}
+
+.signup-text {
+  @extend .fira-sans-extrabold;
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.47);
+}
+
+.bg-image {
+  height: 100% !important;
+}
+
+.header-title {
+  width: 32vw;
+  height: 12vh;
+  text-align: center;
+}
+
+.logo-img {
+  width: 32vw;
+  height: 12vh;
+  object-fit: cover;
+}
+
+.large-heading-text {
+  @extend .fira-sans-semibold;
+  @extend .text-black;
+  font-size: 53px;
+
+  @media (max-width: 768px) {
+    font-size: 33px;
+  }
+}

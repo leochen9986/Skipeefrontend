@@ -1,0 +1,44 @@
+.custom-input {
+    border-color: #E2E2E3 !important; 
+  }
+  
+  .custom-input::placeholder {
+    color: black; 
+    opacity: 1;   
+  }
+  
+  .custom-label{
+    color: #909094;
+  }
+  .custom-btn {
+    background-color: black;
+    width: 15% !important;
+    font-size: medium; 
+    border: none;
+    margin-top: 1%;
+    transition: background-color 0.3s; 
+  }
+  
+  .custom-btn:hover {
+    background-color: grey; 
+  }
+  
+  @media (max-width: 576px) { 
+    .custom-btn {
+      font-size: 14px; 
+      width: 50% !important; 
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .contact-div {
+      width: 95%;
+      display: flex;
+      flex-direction: column; /* Stack elements vertically */
+      justify-content: center; /* Center horizontally */
+      align-items: center; /* Center vertically */
+
+      margin: 0 auto; /* Center the div itself */
+    }
+  }
+  

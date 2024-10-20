@@ -1,0 +1,98 @@
+.custom-button-archive {
+    background-color: #E31B54;
+    border: none; 
+    transition: background-color 0.3s ease;
+    border-radius:15px;
+    padding: 10px 15px;
+  }
+  
+  .custom-button-archive:hover {
+    background-color: #C5113D; 
+  }
+  
+  .custom-button-analytics {
+    background-color: black;
+    border: none; 
+    transition: background-color 0.3s ease;
+    border-radius:15px;
+    padding: 10px 20px;
+    @media (max-width: 768px) {
+      width: 50%;
+    }
+  }
+  
+  .custom-button-analytics:hover {
+    background-color: rgb(114, 114, 114); 
+  } 
+
+  @media (max-width: 768px) {
+    .width-mobile{
+      width: 100%;
+    }
+  }
+
+  .custom-button-settings {
+    background-color: #1DB954;
+    border: none; 
+    transition: background-color 0.3s ease;
+    border-radius:15px;
+    padding: 10px 20px;
+    color: white;
+
+    @media (max-width: 768px) {
+      width: 50%;
+      height: 0%;
+    }
+  }
+  
+  .custom-button-settings:hover {
+    background-color: #22d962; 
+  } 
+
+  // Import the image
+$event-background: 'src/assets/icon_svg/event.png';
+
+.card-body-cc {
+  position: relative;
+  background-image: url(#{$event-background});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top right, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+    z-index: 1; 
+  }
+
+  &::after {
+    content: ''; 
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.5); 
+    z-index: 2; 
+  }
+
+  * {
+    position: relative;
+    z-index: 3; 
+  }
+}
+
+.event-date-badge {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.8em;
+  white-space: nowrap;
+  background-color: #E8F8EE;
+  color: #1DB954;
+  border: 1px solid #1DB954;
+}

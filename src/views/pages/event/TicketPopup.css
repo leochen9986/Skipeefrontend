@@ -1,0 +1,79 @@
+/* TicketPopup.css */
+.ticket-card {
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ticket-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.ticket-card .card-body {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 0.25rem;
+}
+
+.ticket-card .card-title {
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.ticket-card .card-text {
+  color: #34495e;
+}
+
+.ticket-card .badge {
+  font-size: 0.8rem;
+  padding: 0.5em 0.7em;
+}
+
+.modal-content {
+  background-color: #f8f9fa;
+  border:none !important;
+
+}
+
+.modal-header {
+  background-color: white;
+  color: black;
+ 
+}
+
+.modal-header-acc {
+  border:none !important;
+
+}
+
+
+.modal-title {
+  font-weight: bold;
+  
+
+}
+
+.modal-title-venue {
+  font-weight: bold;
+  font-size: 20px;
+
+}
+
+.modal-title-acc {
+  font-size: 30px;
+  padding-left: 33%;
+}
+
+.modal-title-acc-skp {
+  font-size: 30px;
+  padding-left: 43%;
+}
+
+
+@media (max-width: 768px) {
+  .ticket-card {
+    margin-bottom: 1rem;
+  }
+}

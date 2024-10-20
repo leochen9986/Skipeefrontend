@@ -1,0 +1,89 @@
+.input-group {
+    position: relative; 
+  }
+  
+  .input-icon {
+    position: absolute;
+    left: 10px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    pointer-events: none; 
+    z-index: 1; 
+  }
+  
+  .input-with-icon {
+    padding-left: 40px; 
+    background-color: #fff; 
+    border: 1px solid #ced4da; 
+    border-radius: 0.25rem !important; 
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+    z-index: 0; 
+    position: relative; 
+  }
+  
+  .input-with-icon:focus {
+    background-color: #fff; 
+    outline: none; 
+  }
+  
+  .btn-search{
+    background-color:#1DB954 ;
+    padding-left:3%;
+    padding-right:3%;
+    border: none;
+
+  }
+  .btn-search:hover {
+    background-color: #17a34a; /* Darker shade of green on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add subtle shadow effect on hover */
+}
+  @media (max-width: 768px) {
+    .card-gap {
+      margin-bottom: 20px; /* Space between cards */
+    }
+  
+    .icon-container {
+      display: flex;
+      justify-content: center; /* Center the icon */
+      align-items: center; /* Center the icon vertically */
+      margin-bottom: 10px; /* Space between the icon and title */
+    }
+  
+    .make-center {
+      flex-direction: column !important; /* Stack icon and title vertically */
+      align-items: center !important; /* Center align the items */
+      text-align: center;
+      justify-content: center;
+      display: flex;
+    }
+  }
+
+  
+  @media (max-width: 768px) {
+    .contact-div {
+      width: 95%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .custom-row {
+      flex-direction: column !important; /* Stack columns vertically */
+      align-items: center !important; /* Center align columns */
+      width: 100% !important; /* Ensure full width */
+      
+    }
+  
+
+  
+    .about-text,
+    .about-img {
+      width: 100% !important; /* Ensure divs take full width */
+    }
+  
+    .about-img {
+      margin-top: 10px !important; /* Space between text and image */
+    }
+  }
+  
+  

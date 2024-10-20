@@ -1,0 +1,39 @@
+.c-nav-link {
+  color: #000; 
+  border-radius: 0 !important; 
+  position: relative; 
+  padding-left: 8px;
+  display: flex;
+  align-items: center; 
+  margin: 5px 0; 
+}
+
+
+.c-nav-link.active {
+  background-color: #E8F8EE !important; 
+  color: #000 !important; 
+  border-radius: 0 !important; 
+}
+
+
+.c-nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0; 
+  top: 0; 
+  bottom: 0; 
+  width: 3%; 
+  background-color: #1DB954; 
+}
+
+
+.nav-icon img {
+  filter: invert(41%) sepia(96%) saturate(4080%) hue-rotate(1deg) brightness(96%) contrast(102%);
+  width: 16px; 
+  height: 16px; 
+}
+
+// Further reduce icon size for CoreUI icons
+.c-icon {
+  font-size: 0.85rem; // Reduce icon size if using CoreUI icons
+}

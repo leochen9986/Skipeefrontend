@@ -1,0 +1,133 @@
+.user-row-0 {
+    background-color: red;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.user-row-1 {
+    background-color: blue;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.user-row-2 {
+    background-color: green;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.user-row-3 {
+    background-color: yellow;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.left-box {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 8px solid rgba(0, 0, 0, 0);
+    border-radius: 6px;
+}
+
+.right-box {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 8px solid rgba(0, 0, 0, 0);
+    border-radius: 6px;
+}
+
+.value {
+    margin-top: 20px;
+}
+
+.percentage {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    background-color: rgb(178, 254, 197);
+    border-radius: 5px;
+    color: green;
+    font-weight: bold;
+    padding: 0px 10px;
+}
+
+
+// User table
+.ticket-table {
+width: 100%;
+margin: 20px auto;
+border-collapse: collapse;
+}
+
+.ticket-table table {
+width: 100%;
+border-collapse: collapse;
+margin-bottom: 20px;
+}
+
+.ticket-table th, .ticket-table td {
+text-align: left;
+padding: 10px;
+border-bottom: 1px solid #ddd;
+}
+
+.ticket-table th {
+background-color: #f2f2f2;
+font-weight: bold;
+}
+
+.ticket-table td {
+font-size: 16px;
+}
+
+.user-list {
+border-radius: 8px  !important;
+overflow: hidden;
+margin: 10px 0 !important;
+border: 2px solid black !important;
+}
+
+.user-list-item{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    font-weight: bold;
+}
+.ticket-table tbody tr td:nth-child(1) {
+font-weight: bold;
+}
+
+.ticket-table tbody tr td:nth-child(2) {
+display: flex;
+align-items: center;
+}
+
+.ticket-table tbody tr td:nth-child(2) svg {
+margin-left: 8px;
+}
+
+.title {
+    font-size: 20px;
+    margin-left: 3%;
+    display: flex;               
+    align-items: center;
+     
+}
+  
+.value{
+    width:100%;
+    font-size: 37px;
+}
+
+.title-bold {
+    font-size: 36px;
+    font-weight: bold;
+    width: 50%;
+}

@@ -1,0 +1,87 @@
+.ticket-popup-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); 
+}
+
+.ticket-popup {
+  display: flex;
+  flex-direction: column; 
+  align-items: center; 
+  background: white; 
+  padding: 20px; 
+  border-radius: 10px; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+  max-width: 60%; /* Adjusted max-width for better mobile compatibility */
+  width: 100%; /* Set width to 100% to utilize full available space */
+}
+
+.ticket-list {
+  display: flex;
+  overflow-x: auto; /* Allow horizontal scrolling */
+  white-space: nowrap; 
+  padding: 10px; 
+  max-height: 100%; 
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.ticket-item {
+  flex: 0 0 auto; 
+  margin-right: 10px; /* Reduced margin for mobile */
+  border: 1px solid #ddd; 
+  border-radius: 5px; 
+  min-width: 150px; /* Reduced min-width for mobile */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+  transition: background-color 0.3s; 
+}
+
+.ticket-name {
+  position: relative;
+  padding-bottom: 5px;
+  margin: 0;
+}
+
+.dashed-line {
+  width: 100%; 
+  margin-top: 5px; 
+  height: 1px; 
+  background-image: repeating-linear-gradient(
+    to right, 
+    #E2E2E3 0%, 
+    #E2E2E3 6%, 
+    transparent 4%, 
+    transparent 6%
+  ); 
+}
+
+/* Media Queries for Mobile Responsiveness */
+@media (max-width: 768px) {
+  .ticket-popup {
+    padding: 10px; /* Reduced padding for mobile */
+    max-width: 95%; /* Max width for mobile devices */
+  }
+  
+  .ticket-item {
+    min-width: 120px; /* Smaller minimum width for mobile */
+    margin-right: 5px; /* Less margin for mobile */
+  }
+
+  .popup-buttons {
+    flex-direction: column; /* Stack buttons on top of each other */
+    align-items: stretch; /* Stretch buttons to full width */
+  }
+
+  .popup-buttons button,
+  .popup-buttons .custom-button-analytics {
+    width: 100%; /* Full width for buttons */
+    margin-bottom: 10px; /* Space between buttons */
+  }
+}
