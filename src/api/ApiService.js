@@ -4,8 +4,8 @@ import { kBaseUrl } from '../assets/constants/constants'
 
 export class ApiService {
   constructor() {
-    // this.baseUrl = 'http://localhost:5001'
-    this.baseUrl = 'http://localhost:5001'
+    // this.baseUrl = process.env.backendurl
+    this.baseUrl = process.env.backendurl
 
     this.axios = axios.create({
       baseURL: this.baseUrl,
