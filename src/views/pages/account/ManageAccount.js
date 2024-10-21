@@ -33,6 +33,8 @@ import { toast } from 'react-toastify'
 import chosen_fileIcon from 'src/assets/icon_svg/chosen_file.svg';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import stripeIcon from 'src/assets/icon_svg/stripe.svg';
+import { storage } from "../../../firebase"; // adjust path if necessary
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export const ManageAccountPage = () => {
   const [profile, setProfile] = useState(null)
@@ -96,30 +98,60 @@ const SettingsTab = ({ profile }) => {
 
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setImageUrl(URL.createObjectURL(e.target.files[0]));  // Show image preview
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setImageUrl(URL.createObjectURL(selectedFile));  // Show image preview
+      console.log(selectedFile);
+      handleUploadLogo(selectedFile);  // Automatically trigger the upload
+    }
   };
+  
 
 
   const handleButtonClick = () => {
     fileInputRef.current.click(); // Trigger click on the hidden file input
   };
 
-  const handleUploadLogo = async () => {
-    if (!file) {
+  const handleUploadLogo = async (selectedFile) => {
+    const fileToUpload = selectedFile || file;
+  
+    if (!fileToUpload) {
       toast.error('Please select a file to upload');
       return;
     }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
+  
+    const storageRef = ref(storage, `logos/${fileToUpload.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
+  
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+      },
+      (error) => {
+        toast.error("Failed to upload logo");
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        try {
+          await new VenuApiController().uploadLogo(profile.worksIn._id, { logo: downloadURL });
+          setImageUrl(downloadURL);  // Update the displayed logo
+          toast.success('Logo updated successfully');
+        } catch (error) {
+          toast.error('Failed to update logo in the backend');
+        }
+      }
+    );
+  };
+  const updateLogoInBackend = async (logoUrl) => {
     try {
-      const response = await new VenuApiController().uploadLogo(profile.worksIn._id, formData);
-      setImageUrl(response.logo); // Update the logo after a successful upload
+      const response = await new VenuApiController().uploadLogo(profile.worksIn._id, { logo: logoUrl });
+      setImageUrl(logoUrl); // Update the displayed logo in the UI
       toast.success('Logo updated successfully');
     } catch (error) {
-      toast.error('Failed to upload logo');
+      toast.error('Failed to update logo in the backend');
     }
   };
 

@@ -9,7 +9,7 @@ import {
   CTabPanel,
   CTabContent,
   CTabList,
-  CTab,  
+  CTab,
 } from '@coreui/react';
 import { toast } from 'react-toastify';
 import { VenuApiController } from '../../../api/VenuApiController';
@@ -18,8 +18,10 @@ import { AuthApiController } from '../../../api/AuthApiController';
 
 const ListVenues = () => {
   const [sites, setSites] = useState([]);
+  const [archivedSites, setArchivedSites] = useState([]); // State for archived sites
   const [profile, setProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State for search input
+  const [activeTab, setActiveTab] = useState('1'); // Use strings for itemKey
 
   useEffect(() => {
     new AuthApiController().getProfile().then((res) => {
@@ -30,7 +32,6 @@ const ListVenues = () => {
         if (res && !res.worksIn) {
           nav('/apply-now');
         }
-        console.log('account page', res);
         setProfile(res);
       }
     });
@@ -48,9 +49,29 @@ const ListVenues = () => {
       });
   };
 
+  // Fetch archived sites
+  const getArchivedSites = async () => {
+    console.log('Fetching archived sites...');
+    new VenuApiController()
+      .getArchivedSites()
+      .then((res) => {
+        console.log('Archived sites fetched:', res);
+        setArchivedSites(res);
+      })
+      .catch((err) => {
+        console.log('Error fetching archived sites:', err);
+        toast.error(err.response.data.message);
+      });
+  };
+
   useEffect(() => {
-    getAllSites();
-  }, []);
+    console.log('Active tab changed to', activeTab);
+    if (activeTab === '1') {
+      getAllSites(); // Load active sites
+    } else if (activeTab === '2') {
+      getArchivedSites(); // Load archived sites
+    }
+  }, [activeTab]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -59,6 +80,10 @@ const ListVenues = () => {
 
   // Filter the sites based on the search query
   const filteredSites = sites.filter((site) =>
+    site.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredArchivedSites = archivedSites.filter((site) =>
     site.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -92,21 +117,27 @@ const ListVenues = () => {
         </div>
       </div>
       <div className="py-5 mb-5 paper">
-        <CTabs activeItemKey={1}>
+        <CTabs
+          activeItemKey={activeTab}
+          onActiveTabChange={(key) => {
+            console.log('Tab changed to', key);
+            setActiveTab(key);
+          }}
+        >
           <CTabList variant="underline-border" color="success">
-            <CTab aria-controls="all-events-pane" itemKey={1} className='tab-color'>
+            <CTab itemKey="1" className="tab-color">
               Active
             </CTab>
-            <CTab aria-controls="upcoming-tab-pane" itemKey={2} className='tab-color'>
+            <CTab itemKey="2" className="tab-color">
               Archived
             </CTab>
           </CTabList>
           <CTabContent>
-            <CTabPanel className="py-3" aria-labelledby="all-events-pane" itemKey={1}>
+            <CTabPanel className="py-3" itemKey="1">
               <ActiveTab sites={filteredSites} profile={profile} /> {/* Pass filtered sites */}
             </CTabPanel>
-            <CTabPanel className="py-3" aria-labelledby="upcoming-tab-pane" itemKey={2}>
-              {/* <AdminAccountTab siteId={profile?.worksIn?._id} /> */}
+            <CTabPanel className="py-3" itemKey="2">
+              <ArchivedTab sites={filteredArchivedSites} profile={profile} /> {/* Archived sites */}
             </CTabPanel>
           </CTabContent>
         </CTabs>
@@ -117,38 +148,75 @@ const ListVenues = () => {
 
 const ActiveTab = ({ sites, profile }) => {
   return (
-    <CContainer >
+    <CContainer>
       <CRow xs={12}>
         <CCol>
-        <CCardBody>
-          <div style={{ 
+          <CCardBody>
+            <div style={{ 
                 width: '100%', 
                 display: 'flex', 
                 justifyContent: 'flex-start', 
                 alignItems: 'flex-start', 
                 flexWrap: 'wrap', 
               }}>
-            {sites && sites.length > 0 ? (
-              sites.map((site) => {
-                return (
+              {sites && sites.length > 0 ? (
+                sites.map((site) => (
                   <div
                     key={site._id}
                     style={{ 
-                      flex: '0 0 auto', // Prevents flex items from growing/shrinking 
+                      flex: '0 0 auto', 
                       margin: '0', 
-                      padding: '0' ,
-                      width:'50%'
+                      padding: '0',
+                      width: '50%',
                     }}
                   >
                     <SingleVenueItem site={site} />
                   </div>
-                );
-              })
-            ) : (
-              <div>No venues available.</div>
-            )}
-          </div>
-        </CCardBody>
+                ))
+              ) : (
+                <div>No venues available.</div>
+              )}
+            </div>
+          </CCardBody>
+        </CCol>
+      </CRow>
+    </CContainer>
+  );
+};
+
+const ArchivedTab = ({ sites, profile }) => {
+  console.log('ArchivedTab sites:', sites);
+  return (
+    <CContainer>
+      <CRow xs={12}>
+        <CCol>
+          <CCardBody>
+            <div style={{ 
+                width: '100%', 
+                display: 'flex', 
+                justifyContent: 'flex-start', 
+                alignItems: 'flex-start', 
+                flexWrap: 'wrap', 
+              }}>
+              {sites && sites.length > 0 ? (
+                sites.map((site) => (
+                  <div
+                    key={site._id}
+                    style={{ 
+                      flex: '0 0 auto', 
+                      margin: '0', 
+                      padding: '0',
+                      width: '50%',
+                    }}
+                  >
+                    <SingleVenueItem site={site} />
+                  </div>
+                ))
+              ) : (
+                <div>No archived venues available.</div>
+              )}
+            </div>
+          </CCardBody>
         </CCol>
       </CRow>
     </CContainer>

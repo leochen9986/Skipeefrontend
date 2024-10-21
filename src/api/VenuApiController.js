@@ -10,9 +10,13 @@ export class VenuApiController {
   }
 
   getAllSites() {
-    return this.apiService.get('/sites')
+    return this.apiService.get('/sites'); // Assuming active sites by default
   }
 
+  // Method to fetch archived sites
+  getArchivedSites() {
+    return this.apiService.get('/sites?archived=true'); // Filter to get archived sites
+  }
   deleteSite(id) {
     return this.apiService.delete(`/sites/${id}`)
   }
@@ -28,6 +32,12 @@ export class VenuApiController {
   console.log(response);  // Add this line to log the response
   return response;
 });
+  }
+
+
+  uploadLogo(siteId, logoData) {
+    console.log(logoData);
+    return this.apiService.put(`/sites/${siteId}/upload-logo`, logoData);
   }
 
   getEvent(id) {

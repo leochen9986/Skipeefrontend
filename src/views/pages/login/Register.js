@@ -30,41 +30,54 @@ const Register = () => {
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-
-    if (!firstName) {
-        toast.warning('Please enter your first name')
-        return
-      }
+    e.preventDefault();
   
-      if (!lastName) {
-        toast.warning('Please enter your last name')
-        return
-      }
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
+    if (!firstName) {
+      toast.warning('Please enter your first name');
+      return;
+    }
+  
+    if (!lastName) {
+      toast.warning('Please enter your last name');
+      return;
+    }
+  
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
     if (!email || !emailRegex.test(email)) {
-      toast.warning('Please enter a valid email')
-      return
+      toast.warning('Please enter a valid email');
+      return;
     }
-
+  
     if (!password) {
-      toast.warning('Please enter a password')
-      return
+      toast.warning('Please enter a password');
+      return;
     }
-
+  
+    const requestData = {
+      name: `${firstName} ${lastName}`,
+      email,
+      phone,
+      organisation,
+      password,
+      role: 'manager',
+    };
+  
+    // Sending join request instead of registration
     new AuthApiController()
-    .register({ name: `${firstName} ${lastName}`, email, password, role: 'manager' })
-    .then((res) => {
-      if (res.message) {
-        toast.error(res.message)
-      } else {
-        const access_token = res.token
-        localStorage.setItem('skipee_access_token', access_token)
-        toast.success('Registration successful')
-        onSubmit()
-      }
-    })
-  }
+      .requestJoin(requestData)
+      .then((res) => {
+        if (res.message) {
+          toast.error(res.message);
+        } else {
+          toast.success('Join request submitted successfully. Please wait for approval.');
+          nav('/dashboard'); // Redirect to the dashboard or wherever after submitting join request
+        }
+      })
+      .catch((error) => {
+        console.error('Error during join request:', error);
+        toast.error('Failed to submit join request');
+      });
+  };
 
   const checkAuthentication = () => {
     if (window.location.href.includes('login') || window.location.href.includes('register')) {
