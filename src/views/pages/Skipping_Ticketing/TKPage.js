@@ -614,35 +614,34 @@ const PastEventsTab = ({ query, event, onProceed }) => {
           <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" width="60%" />
         </div>
       ) : (
-        eventsList.map((event, index) => (
         <div className="table-responsive">
-            <CTable className="order-table" style={{ border: '1px solid #ddd' ,borderRadius:'8px'}}>
-              <CTableHead >
+          <CTable className="order-table" style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
+            <CTableHead>
                 <CTableRow>
-                  <CTableHeaderCell className='table-header-cell' scope="col">Event Name</CTableHeaderCell>
-                  <CTableHeaderCell className='table-header-cell' scope="col">Date</CTableHeaderCell>
-                  <CTableHeaderCell className='table-header-cell'  scope="col">Opening Time</CTableHeaderCell>
-                  <CTableHeaderCell className='table-header-cell' scope="col">Last Entry</CTableHeaderCell>
-                  <CTableHeaderCell className='table-header-cell' scope="col">Price</CTableHeaderCell>
+                <CTableHeaderCell className="table-header-cell" scope="col">Event Name</CTableHeaderCell>
+                <CTableHeaderCell className="table-header-cell" scope="col">Date</CTableHeaderCell>
+                <CTableHeaderCell className="table-header-cell" scope="col">Opening Time</CTableHeaderCell>
+                <CTableHeaderCell className="table-header-cell" scope="col">Last Entry</CTableHeaderCell>
+                <CTableHeaderCell className="table-header-cell" scope="col">Price</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
+              {eventsList.map((event, index) => (
                         <CTableRow key={index}>
                           <CTableDataCell>{event.name}</CTableDataCell>
                           <CTableDataCell>
                             {`${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })} ${new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}`}
                           </CTableDataCell>
-                          <CTableDataCell >{event.startTime} - {event.endTime}</CTableDataCell>
-                          <CTableDataCell >{/* Last entry data here */}</CTableDataCell>
+                  <CTableDataCell>{event.startTime} - {event.endTime}</CTableDataCell>
+                  <CTableDataCell>{/* Last entry data here */}</CTableDataCell>
                         {event.tickets.map((ticket, ticketIndex) => (
-                          <CTableDataCell>£{parseFloat(ticket.price).toFixed(2)}</CTableDataCell>
+                    <CTableDataCell key={ticketIndex}>£{parseFloat(ticket.price).toFixed(2)}</CTableDataCell>
                         ))}
                         </CTableRow>
+              ))}
               </CTableBody>
             </CTable>
           </div>
-                        
-        ))
       )}
     </>
   );
@@ -666,12 +665,6 @@ const AddTicketing = ({ siteId ,profile}) => {
     days.map(() => ({ status: true, limitQuantity: false })) // Initial state for toggles
   );
 
-  const handleToggle = (index, type) => {
-    const updatedToggles = [...toggles];
-    updatedToggles[index][type] = !updatedToggles[index][type];
-    setToggles(updatedToggles);
-  };
-
   const handleButtonClick = (index) => {
     // If an image is already selected, reset it
     if (selectedImages[index]) {
@@ -682,6 +675,14 @@ const AddTicketing = ({ siteId ,profile}) => {
       fileInputRefs.current[index].current.click(); // Trigger click on the hidden file input for this row
     }
   };
+
+  
+  const handleToggle = (index, type) => {
+    const updatedToggles = [...toggles];
+    updatedToggles[index][type] = !updatedToggles[index][type];
+    setToggles(updatedToggles);
+  };
+
 
   const handleFileChange = (event, index) => {
     const file = event.target.files[0];
@@ -923,6 +924,7 @@ const AddSESkip = ({ siteId }) => {
   const [price, setPrice] = useState('');
   const [tickets, setTickets] = useState('');
   const [openingTime, setOpeningTime] = useState('');
+  const [openingEndTime, setOpeningEndTime] = useState('');
   const [lastEntryTime, setLastEntryTime] = useState('');
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null); 
@@ -935,7 +937,7 @@ const AddSESkip = ({ siteId }) => {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name) {

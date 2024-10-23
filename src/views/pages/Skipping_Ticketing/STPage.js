@@ -54,6 +54,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const STPage = ({ site }) => {
   const [profile, setProfile] = useState(null)
   const [sites, setSites] = useState([]);
+  const [activeSiteId, setActiveSiteId] = useState(null); // Currently selected siteId
 
   useEffect(() => {
     new AuthApiController().getProfile().then((res) => {
@@ -90,10 +91,24 @@ const STPage = ({ site }) => {
 
         // Add the "All" tab at the beginning
         setTabs([ ...tabsData]);
+
+        if (tabsData.length > 0) {
+          setActiveSiteId(tabsData[0].siteId);
+        }
       }
       setLoading(false);
     });
   };
+
+
+    // Update the active siteId when the active tab changes
+    const handleTabChange = (newTabKey) => {
+      setActiveTab(newTabKey);
+      const selectedSite = tabs.find((tab) => tab.key === newTabKey);
+      if (selectedSite) {
+        setActiveSiteId(selectedSite.siteId); // Set the siteId for the selected tab
+      }
+    };
 
   // if (loading || !profile) {
   //   return (
@@ -428,7 +443,7 @@ const EventsTab = ({ profile, siteId, siteIds }) => {
       <CTabContent>
         <CTabPanel className="py-3" aria-labelledby="all-events-pane" itemKey={1}>
           {profile ? (
-            <AllEventsTab query={{ ...query, status: 'upcoming' }} profile={profile} />
+            <AllEventsTab query={{ ...query, status: 'upcoming' }} profile={profile} siteId={siteId}/>
           ) : (
             <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
               <CSpinner color="primary" />
@@ -451,7 +466,7 @@ const EventsTab = ({ profile, siteId, siteIds }) => {
 
 
 
-const AllEventsTab = ({ query, profile }) => {
+const AllEventsTab = ({ query, profile ,siteId}) => {
   const [eventsList, setEventsList] = useState([]);
   const [popupVisibleW, setPopupVisibleW] = useState(false);
   const [popupChildrenW, setPopupChildrenW] = useState(null);
@@ -551,9 +566,9 @@ const AllEventsTab = ({ query, profile }) => {
 <div className='add-events-btn' >
       <CButton
         color="success text-white"
-        siteId={profile?.worksIn?._id}
+        siteId={siteId}
         onClick={() => {
-          setPopupChildrenW(<AddSkipping siteId={profile?.worksIn?._id} />);
+          setPopupChildrenW(<AddSkipping siteId={siteId} />);
           setPopupVisibleW(true);
         }}
 
@@ -647,56 +662,178 @@ const PastEventsTab = ({ query, event, onProceed }) => {
 };
 
 
-const AddSkipping = ({ siteId ,profile}) => {
-  const [selectedImage, setSelectedImage] = useState(null); // State for the selected image
-  const fileInputRef = useRef(null); 
-  const [selectedImages, setSelectedImages] = useState({});
-  const [popupVisible, setPopupVisible] = React.useState(false);
-  const [popupChildren, setPopupChildren] = React.useState(null);
+
+const AddSkipping = ({ siteId }) => {
+  const [eventData, setEventData] = useState({});
+  const [eventsByDay, setEventsByDay] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupChildren, setPopupChildren] = useState(null);
   const [popupTitle, setPopupTitle] = useState('');
+  const fileInputRefs = useRef({});
 
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  // Days of the week starting from Sunday (getDay() returns 0-6, Sunday to Saturday)
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  const fileInputRefs = useRef(days.map(() => React.createRef()));
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await new VenuApiController().getAllEvents({ siteId });
+        if (res.message) {
+          toast.error(res.message);
+        } else {
+          // Initialize eventsByDay with empty arrays for each day
+          const eventsByDayTemp = {};
+          daysOfWeek.forEach((day) => {
+            eventsByDayTemp[day] = [];
+          });
 
-  const [toggles, setToggles] = useState(
-    days.map(() => ({ status: true, limitQuantity: false })) // Initial state for toggles
-  );
+          // Initialize eventData
+          const initialEventData = {};
 
-  const handleButtonClick = (index) => {
-    // If an image is already selected, reset it
-    if (selectedImages[index]) {
-      const updatedImages = { ...selectedImages };
-      delete updatedImages[index]; // Delete the selected image for this row
-      setSelectedImages(updatedImages);
-    } else {
-      fileInputRefs.current[index].current.click(); // Trigger click on the hidden file input for this row
+          // Group events by day of the week and initialize eventData
+          res.forEach((event) => {
+            const eventDate = new Date(event.date);
+            const dayName = daysOfWeek[eventDate.getDay()];
+            eventsByDayTemp[dayName].push(event);
+
+            initialEventData[event._id] = {
+              name: event.name,
+              startTime: event.startTime,
+              endTime: event.endTime,
+              price: event.tickets?.[0]?.price || '',
+              lastEntryTime: event.lastEntryTime || '',
+              limitQuantity: event.limitQuantity || false,
+              status: event.status === 'upcoming',
+              image: event.image || null,
+              quantity: event.tickets?.[0]?.totalQuantity || '',
+              tickets: event.tickets,
+            };
+          });
+
+          setEventsByDay(eventsByDayTemp);
+          setEventData(initialEventData);
+        }
+      } catch (error) {
+        toast.error('Failed to load events');
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [siteId]);
+
+  const handleInputChange = (eventId, field, value) => {
+    setEventData((prevData) => ({
+      ...prevData,
+      [eventId]: {
+        ...prevData[eventId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSaveAll = async () => {
+    // Save all events
+    for (const eventId of Object.keys(eventData)) {
+      await handleSave(eventId, false); // Pass false to prevent multiple toasts
+    }
+    toast.success('All changes saved successfully.');
+  };
+
+  const handleSave = async (eventId, showToast = true) => {
+    const updatedEvent = eventData[eventId];
+    try {
+      // Prepare data for API call
+      const eventUpdateData = {
+        name: updatedEvent.name,
+        startTime: updatedEvent.startTime,
+        endTime: updatedEvent.endTime,
+        lastEntryTime: updatedEvent.lastEntryTime,
+        status: updatedEvent.status ? 'upcoming' : 'completed',
+        image: updatedEvent.image,
+        limitQuantity: updatedEvent.limitQuantity,
+      };
+
+      // Update event details
+      await new VenuApiController().updateEvent(eventId, eventUpdateData);
+
+      // Update ticket price if necessary
+      if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
+        const ticketId = updatedEvent.tickets[0]._id;
+        const ticketUpdateData = {
+          price: updatedEvent.price,
+          totalQuantity: updatedEvent.quantity,
+          availableQuantity: updatedEvent.quantity, // Adjust as needed
+        };
+        await new VenuApiController().updateEventTicket(ticketId, ticketUpdateData);
+      }
+
+      if (showToast) {
+        toast.success('Event updated successfully.');
+      }
+    } catch (error) {
+      toast.error('Failed to update event.');
+      console.error(error);
     }
   };
 
-  
-  const handleToggle = (index, type) => {
-    const updatedToggles = [...toggles];
-    updatedToggles[index][type] = !updatedToggles[index][type];
-    setToggles(updatedToggles);
+  const handleToggleChange = (eventId, field, value) => {
+    handleInputChange(eventId, field, value);
+    handleSave(eventId);
   };
 
+  const handleButtonClick = (eventId) => {
+    if (fileInputRefs.current[eventId]) {
+      fileInputRefs.current[eventId].click();
+    }
+  };
 
-  const handleFileChange = (event, index) => {
-    const file = event.target.files[0];
+  const handleFileChange = async (e, eventId) => {
+    const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file); // Create a URL for the selected image
-      setSelectedImages((prevImages) => ({
-        ...prevImages,
-        [index]: imageUrl, // Update the state with the selected image URL for this row
-      }));
-      console.log(`Selected file: ${file.name}`);
+      try {
+        // Upload to Firebase and get download URL
+        const downloadURL = await uploadImageToFirebase(file);
+
+        // Update the local state
+        handleInputChange(eventId, 'image', downloadURL);
+
+        // Save the event to the backend
+        await handleSave(eventId);
+      } catch (error) {
+        toast.error('Failed to upload image');
+        console.error(error);
+      }
     }
   };
-  const handleSubmit = (e) => {
-    e.preventDefault();
 
+  const uploadImageToFirebase = async (file) => {
+    const storageRef = ref(storage, `event-images/${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
   };
+
+  const handleDeleteImage = async (eventId) => {
+    try {
+      // Remove image from Firebase if necessary
+      // Update the local state
+      handleInputChange(eventId, 'image', null);
+
+      // Save the event to the backend
+      await handleSave(eventId);
+    } catch (error) {
+      toast.error('Failed to delete image');
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return <CSpinner />;
+  }
 
   return (
     <>
@@ -704,161 +841,263 @@ const AddSkipping = ({ siteId ,profile}) => {
         <CTable className="order-table" style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
           <CTableHead>
             <CTableRow>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Day</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Status</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Opening Times</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Price</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Last Entry Time</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Event Name</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Limit Quantity</CTableHeaderCell>
-              <CTableHeaderCell className='table-header-cell addskp' scope="col">Event Image</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Day</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Event Name</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Status</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Opening Times</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Price</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Last Entry Time</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Limit Quantity</CTableHeaderCell>
+              <CTableHeaderCell className="table-header-cell addskp">Event Image</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {days.map((day, index) => (
-              <CTableRow key={index}>
-                <CTableDataCell>{day}</CTableDataCell>
-                <CTableDataCell>
-                  <label className="toggle-container">
-                    <input
-                      type="checkbox"
-                      checked={toggles[index].status}
-                      onChange={() => handleToggle(index, 'status')}
-                      className="toggle-input"
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </CTableDataCell>
-                <CTableDataCell>hello</CTableDataCell>
-                <CTableDataCell>hello</CTableDataCell>
-                <CTableDataCell>hello</CTableDataCell>
-                <CTableDataCell>hello</CTableDataCell>
-                <CTableDataCell>
-                  <label className="toggle-container">
-                    <input
-                      type="checkbox"
-                      checked={toggles[index].limitQuantity}
-                      onChange={() => handleToggle(index, 'limitQuantity')}
-                      className="toggle-input"
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                  {toggles[index].limitQuantity && (
-                    <CButton size="sm" style={{ marginLeft: '5px', backgroundColor: 'transparent' }}
-                    siteId={profile?.worksIn?._id}
-                    onClick={() => {
-                      setPopupTitle('Enter Quantity');
-                      setPopupChildren(<EnterQuantity siteId={profile?.worksIn?._id} />);
-                      setPopupVisible(true);
-                    }}
-                    >
-                      <img src={editIcon} style={{ width: '15px', height: '15px' }} />
-                    </CButton>
-                  )}
-                </CTableDataCell>
-                <CTableDataCell>
-                {selectedImages[index] ? ( // Conditional rendering
-                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                      <img 
-                        src={selectedImages[index]} 
-                        alt="Selected" 
-                        style={{ 
-                          width: 'auto', 
-                          height: '50px', 
-                          objectFit: 'cover', 
-                          border: '5px solid #EDEDEE', 
-                          borderRadius: '10px',
-                        }} 
-                      />
-                      <CButton size="l" style={{ backgroundColor: '#E31B54' }} onClick={() => handleButtonClick(index)}>
-                        <img 
-                          src={deleteIcon} 
-                          alt="Delete file" 
-                          style={{ width: '15px', height: '15px' }} 
+            {daysOfWeek.map((day, index) => (
+              <React.Fragment key={index}>
+                {/* Check if there are events on this day */}
+                {eventsByDay[day] && eventsByDay[day].length > 0 ? (
+                  eventsByDay[day].map((event, eventIndex) => (
+                    <CTableRow key={`${index}-${eventIndex}`}>
+                      {/* Only show the day name for the first event of the day */}
+                      {eventIndex === 0 ? (
+                        <CTableDataCell rowSpan={eventsByDay[day].length}>{day}</CTableDataCell>
+                      ) : null}
+                      <CTableDataCell>
+                        <CFormInput
+                          value={eventData[event._id]?.name}
+                          onChange={(e) => handleInputChange(event._id, 'name', e.target.value)}
+                          onBlur={() => handleSave(event._id)}
+                          className="event-name-input"
                         />
-                      </CButton>
-                    </div>
-                  ) : (
-                    <>
-                      <CButton size="l" style={{ backgroundColor: '#EDEDEE' }} onClick={() => handleButtonClick(index)}>
-                        <img 
-                          src={chosen_fileIcon} 
-                          alt="Choose file" 
-                          style={{ width: '15px', height: '15px' }} 
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {/* Status toggle */}
+                        <label className="toggle-container">
+                          <input
+                            type="checkbox"
+                            checked={eventData[event._id]?.status}
+                            onChange={(e) =>
+                              handleToggleChange(event._id, 'status', e.target.checked)
+                            }
+                            className="toggle-input"
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                          <CFormInput
+                            value={eventData[event._id]?.startTime}
+                            onChange={(e) =>
+                              handleInputChange(event._id, 'startTime', e.target.value)
+                            }
+                            onBlur={() => handleSave(event._id)}
+                            placeholder="Start Time"
+                            className="start-time-input"
+                          />
+                          <CFormInput
+                            value={eventData[event._id]?.endTime}
+                            onChange={(e) =>
+                              handleInputChange(event._id, 'endTime', e.target.value)
+                            }
+                            onBlur={() => handleSave(event._id)}
+                            placeholder="End Time"
+                            className="end-time-input"
+                          />
+                        </div>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CFormInput
+                          type="number"
+                          value={eventData[event._id]?.price}
+                          onChange={(e) => handleInputChange(event._id, 'price', e.target.value)}
+                          onBlur={() => handleSave(event._id)}
+                          className="price-input"
                         />
-                      </CButton>
-                      {/* Hidden file input */}
-                      <input 
-                        type="file" 
-                        ref={fileInputRefs.current[index]} 
-                        onChange={(event) => handleFileChange(event, index)} 
-                        style={{ display: 'none' }} // Hide the file input
-                      />
-                    </>
-                  )}
-                </CTableDataCell>
-              </CTableRow>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CFormInput
+                          value={eventData[event._id]?.lastEntryTime}
+                          onChange={(e) =>
+                            handleInputChange(event._id, 'lastEntryTime', e.target.value)
+                          }
+                          onBlur={() => handleSave(event._id)}
+                          className="last-entry-input"
+                        />
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {/* Limit Quantity toggle */}
+                        <label className="toggle-container">
+                          <input
+                            type="checkbox"
+                            checked={eventData[event._id]?.limitQuantity}
+                            onChange={(e) =>
+                              handleToggleChange(event._id, 'limitQuantity', e.target.checked)
+                            }
+                            className="toggle-input"
+                          />
+                          <span className="toggle-slider"></span>
+                        </label>
+                        {eventData[event._id]?.limitQuantity && (
+                          <CButton
+                            size="sm"
+                            style={{ marginLeft: '5px', backgroundColor: 'transparent' }}
+                            onClick={() => {
+                              setPopupTitle('Enter Quantity');
+                              setPopupChildren(
+                                <EnterQuantity
+                                  eventId={event._id}
+                                  initialQuantity={eventData[event._id]?.quantity || ''}
+                                  onSave={async (quantity) => {
+                                    handleInputChange(event._id, 'quantity', quantity);
+                                    await handleSave(event._id);
+                                    setPopupVisible(false);
+                                  }}
+                                />
+                              );
+                              setPopupVisible(true);
+                            }}
+                          >
+                            <img src={editIcon} style={{ width: '15px', height: '15px' }} alt="Edit" />
+                          </CButton>
+                        )}
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {/* Event Image */}
+                        {eventData[event._id]?.image ? (
+                          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                            <img
+                              src={eventData[event._id].image}
+                              alt="Event"
+                              style={{
+                                width: 'auto',
+                                height: '50px',
+                                objectFit: 'cover',
+                                border: '5px solid #EDEDEE',
+                                borderRadius: '10px',
+                              }}
+                            />
+                            <CButton
+                              size="l"
+                              style={{ backgroundColor: '#E31B54' }}
+                              onClick={() => handleDeleteImage(event._id)}
+                            >
+                              <img
+                                src={deleteIcon}
+                                alt="Delete file"
+                                style={{ width: '15px', height: '15px' }}
+                              />
+                            </CButton>
+                          </div>
+                        ) : (
+                          <>
+                            <CButton
+                              size="l"
+                              style={{ backgroundColor: '#EDEDEE' }}
+                              onClick={() => handleButtonClick(event._id)}
+                            >
+                              <img
+                                src={chosen_fileIcon}
+                                alt="Choose file"
+                                style={{ width: '15px', height: '15px' }}
+                              />
+                            </CButton>
+                            {/* Hidden file input */}
+                            <input
+                              type="file"
+                              ref={(el) => (fileInputRefs.current[event._id] = el)}
+                              onChange={(e) => handleFileChange(e, event._id)}
+                              style={{ display: 'none' }}
+                            />
+                          </>
+                        )}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))
+                ) : (
+                  // If no events on this day, show an empty row with the day name
+                  <CTableRow key={index}>
+                    <CTableDataCell>{day}</CTableDataCell>
+                    <CTableDataCell colSpan="7">No events scheduled.</CTableDataCell>
+                  </CTableRow>
+                )}
+              </React.Fragment>
             ))}
           </CTableBody>
         </CTable>
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: '25px' }}>
-          <CButton
-            color="success text-white"
-            style={{
-              flex: 1,
-              marginRight: '5px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              borderRadius: '15px',
-              padding: '0px 20px',
-              backgroundColor: 'black',
-              border: 'none',
-              height: '43px',
-            }}
-            onClick={() => {
-              setPopupTitle('Add Single Event Skip');
-              setPopupChildren(<AddSESkip siteId={profile?.worksIn?._id} />);
-              setPopupVisible(true);
-            }}
-          >
-            Add Single Event
-          </CButton>
-          <CButton
-            color="success text-white"
-            style={{
-              flex: 1,
-              marginLeft: '5px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-              borderRadius: '15px',
-              padding: '0px 20px',
-              backgroundColor: '#1DB954',
-              border: 'none',
-              height: '43px',
-            }}
-            // onClick={handleSubmit} 
-          >
-            Save
-          </CButton>
-        </div>
       </div>
 
-      {popupVisible && (
-        <div className="modal-overlay" />
-      )}
-      <PopupModelBase
-        visible={popupVisible}
-        onClose={() => {
-          setPopupVisible(false)
-        }}
-        title={popupTitle}
-        children={popupChildren}
-      />
+      {/* Add Single Event and Save Buttons */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: '25px', marginTop: '20px' }}>
+        <CButton
+          color="success text-white"
+          style={{
+            flex: 1,
+            marginRight: '5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            borderRadius: '15px',
+            padding: '0px 20px',
+            backgroundColor: 'black',
+            border: 'none',
+            height: '43px',
+          }}
+          onClick={() => {
+            setPopupTitle('Add Single Event Skip');
+            setPopupChildren(
+              <AddSESkip
+                siteId={siteId}
+                onEventAdded={() => {
+                  // Refresh events after adding a new one
+                  setLoading(true);
+                  setPopupVisible(false);
+                  // Re-fetch events
+                  const fetchEvents = async () => {
+                    // ... same as before ...
+                  };
+                  fetchEvents();
+                }}
+              />
+            );
+            setPopupVisible(true);
+          }}
+        >
+          Add Single Event
+        </CButton>
+        <CButton
+          color="success text-white"
+          style={{
+            flex: 1,
+            marginLeft: '5px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            borderRadius: '15px',
+            padding: '0px 20px',
+            backgroundColor: '#1DB954',
+            border: 'none',
+            height: '43px',
+          }}
+          onClick={handleSaveAll}
+        >
+          Save
+        </CButton>
+      </div>
 
+      {/* Popup for Enter Quantity and Add Single Event */}
+      {popupVisible && (
+        <PopupModelBase
+          visible={popupVisible}
+          onClose={() => {
+            setPopupVisible(false);
+          }}
+          title={popupTitle}
+          children={popupChildren}
+        />
+      )}
     </>
   );
 };
@@ -916,16 +1155,24 @@ const EnterQuantity = () => {
 }
 
 
-const AddSESkip = ({ siteId }) => {
+const AddSESkip = ({ siteId, onEventAdded }) => {
   const [name, setName] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(null); // Use null to start with no date selected
   const [price, setPrice] = useState('');
-  const [tickets, setTickets] = useState('');
+  const [tickets, setTickets] = useState(''); // Total quantity of tickets
   const [openingTime, setOpeningTime] = useState('');
   const [openingEndTime, setOpeningEndTime] = useState('');
   const [lastEntryTime, setLastEntryTime] = useState('');
   const [file, setFile] = useState(null);
-  const fileInputRef = useRef(null); 
+  const fileInputRef = useRef(null);
+
+  // Handle file upload to Firebase
+  const uploadImageToFirebase = async (file) => {
+    const storageRef = ref(storage, `event-images/${file.name}`);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -955,29 +1202,62 @@ const AddSESkip = ({ siteId }) => {
       toast.warning('Please enter the number of tickets');
       return;
     }
-    if (!openingTime ) {
+    if (!openingTime || !openingEndTime) {
       toast.warning('Please enter valid opening and closing times');
       return;
     }
 
-    const data = {
-      name,
-      date,
-      price,
-      tickets,
-      openingTime,
-      lastEntryTime
-    };
-    
     try {
-      const response = await new VenuApiController().createEvent(data);
-      if (response) {
-        toast.success("Event created successfully");
-        // Handle success logic
+      // Upload image if available
+      let imageUrl = '';
+      if (file) {
+        imageUrl = await uploadImageToFirebase(file);
+      }
+
+      // Prepare event data
+      const eventData = {
+        name,
+        date: date.toISOString(),
+        startTime: openingTime,
+        endTime: openingEndTime,
+        lastEntryTime,
+        image: imageUrl,
+        site: siteId,
+        status: 'upcoming',
+      };
+
+      // Create the Event
+      const eventResponse = await new VenuApiController().createEvent(eventData);
+      if (eventResponse && !eventResponse.message) {
+        const eventId = eventResponse._id;
+
+        // Prepare ticket data
+        const ticketData = {
+          name: 'Skip Ticket', // Customize as needed
+          type: 'skip',
+          price: parseFloat(price),
+          totalQuantity: parseInt(tickets),
+          availableQuantity: parseInt(tickets),
+        };
+
+        // Add the ticket to the event
+        const ticketResponse = await new VenuApiController().addTickets(eventId, ticketData);
+        if (ticketResponse && !ticketResponse.message) {
+          toast.success('Event and ticket created successfully.');
+
+          // Call the onEventAdded callback to refresh events
+          if (onEventAdded) {
+            onEventAdded();
+          }
+        } else {
+          toast.error('Failed to create event ticket.');
+        }
+      } else {
+        toast.error('Failed to create event.');
       }
     } catch (error) {
-      toast.error("Failed to create event");
-      console.error(error);
+      toast.error('Failed to create event.');
+      console.error('Error creating event:', error);
     }
   };
 
@@ -999,9 +1279,9 @@ const AddSESkip = ({ siteId }) => {
       <div className="mb-3">
         <h3 className="setting-label">Date</h3>
         <DatePicker
-          selected={date} // Bind the selected date to state
-          onChange={(newDate) => setDate(newDate)} // Update the date state when changed
-          dateFormat="yyyy-MM-dd" // Format the date display
+          selected={date}
+          onChange={(newDate) => setDate(newDate)}
+          dateFormat="yyyy-MM-dd"
           placeholderText="Select date"
           className="setting-input"
         />
@@ -1009,20 +1289,30 @@ const AddSESkip = ({ siteId }) => {
 
       {/* Opening Times */}
       <div className="mb-3">
-        <h3 className="setting-label">Opening Times</h3>
+        <h3 className="setting-label">Opening Start Time</h3>
         <CFormInput
           onChange={(e) => setOpeningTime(e.target.value)}
           value={openingTime}
-          placeholder="00:00-00:00"
-          autoComplete="00:00-00:00"
+          placeholder="Enter start time (e.g., 18:00)"
+          autoComplete="off"
           size="lg"
           className="setting-input"
         />
       </div>
 
+      <div className="mb-3">
+        <h3 className="setting-label">Opening End Time</h3>
+        <CFormInput
+          onChange={(e) => setOpeningEndTime(e.target.value)}
+          value={openingEndTime}
+          placeholder="Enter end time (e.g., 23:00)"
+          autoComplete="off"
+          size="lg"
+          className="setting-input"
+        />
+      </div>
 
-
-      {/* Skip Price */}
+      {/* Event Price */}
       <div className="mb-3">
         <h3 className="setting-label">Event Price</h3>
         <div className="input-with-symbol">
@@ -1034,6 +1324,7 @@ const AddSESkip = ({ siteId }) => {
             size="lg"
             className="setting-input-with-symbol"
             min="0"
+            step="0.01"
           />
           <span className="symbol">£</span>
         </div>
@@ -1059,7 +1350,7 @@ const AddSESkip = ({ siteId }) => {
         <CFormInput
           onChange={(e) => setLastEntryTime(e.target.value)}
           value={lastEntryTime}
-          placeholder="00:00"
+          placeholder="Enter last entry time (e.g., 22:00)"
           size="lg"
           className="setting-input"
         />
@@ -1077,6 +1368,7 @@ const AddSESkip = ({ siteId }) => {
             className="setting-input"
           />
           <button
+            type="button"
             onClick={handleButtonClick}
             className="setting-btn"
           >
@@ -1102,6 +1394,7 @@ const AddSESkip = ({ siteId }) => {
     </CForm>
   );
 };
+
 
 const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const [name, setName] = useState('');
