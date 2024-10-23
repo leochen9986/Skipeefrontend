@@ -21,6 +21,8 @@ export class VenuApiController {
     return this.apiService.delete(`/sites/${id}`)
   }
 
+  
+
   async getAllEvents(query) {
     let url = `/sites/events?`
     for (const key in query) {
@@ -34,7 +36,9 @@ export class VenuApiController {
 });
   }
 
-
+  async getSitesByOwnerSkipping(ownerId) {
+    return await this.apiService.get(`/sites?ownerId=${ownerId}&skipping=true`);
+  }
   uploadLogo(siteId, logoData) {
     console.log(logoData);
     return this.apiService.put(`/sites/${siteId}/upload-logo`, logoData);

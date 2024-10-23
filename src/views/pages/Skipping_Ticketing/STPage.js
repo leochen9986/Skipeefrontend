@@ -48,9 +48,13 @@ import PopupModelBaseWidth from '../../popup/PopupModelBaseWidth';
 import PopupModelBase from '../../popup/PopupModelBase'
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { storage } from "../../../firebase";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const STPage = ({ site }) => {
   const [profile, setProfile] = useState(null)
+  const [sites, setSites] = useState([]);
+
   useEffect(() => {
     new AuthApiController().getProfile().then((res) => {
       if (res.message) {
@@ -62,10 +66,43 @@ const STPage = ({ site }) => {
         }
         console.log('account page', res)
         setProfile(res)
+        fetchOwnedSites(res._id);
       }
     })
     
   }, [])
+
+
+
+  const fetchOwnedSites = (userId) => {
+    new VenuApiController().getSitesByOwnerSkipping(userId).then((res) => {
+      if (res.message) {
+        toast.error(res.message);
+      } else {
+        setSites(res);
+
+        // Create tabs data
+        const tabsData = res.map((site, index) => ({
+          key: index + 1, // Start from 1, since 0 is "All"
+          label: site.location || site.name,
+          siteId: site._id,
+        }));
+
+        // Add the "All" tab at the beginning
+        setTabs([ ...tabsData]);
+      }
+      setLoading(false);
+    });
+  };
+
+  // if (loading || !profile) {
+  //   return (
+  //     <div className="d-flex justify-content-center align-items-center">
+  //       <CSpinner />
+  //     </div>
+  //   );
+  // }
+
   const [tabs, setTabs] = useState([
     { key: 1, label: 'Westbury St', content: <div>{/*Archived Content*/}</div> },
     { key: 2, label: 'Frewin Ct', content: <div>{/*Archived Content*/}</div> }
@@ -166,9 +203,28 @@ const STPage = ({ site }) => {
 
   // Function to trigger the popup and display content inside it
   const showPopup = () => {
+    setPopupChildrenV(
+      <AddNewLocation
+        onClose={() => {
+          setPopupVisibleV(false);
+        }}
+        onSiteCreated={(newSite) => {
+          // Update sites and tabs
+          setSites([...sites, newSite]);
+          const newKey = tabs.length + 1;
+          const newTab = {
+            key: newKey,
+            label: newSite.location || newSite.name,
+            siteId: newSite._id,
+          };
+          setTabs([...tabs, newTab]);
+          setActiveTab(newKey);
+          setPopupVisibleV(false);
+        }}
+      />
+    );
     setPopupVisibleV(true);
   };
-
   const closePopup = () => {
     setPopupVisibleV(false);
     setPopupChildrenV(null);
@@ -235,6 +291,7 @@ const STPage = ({ site }) => {
       setLoading(false)
     })
   }
+  
 
   if (loading)
     return (
@@ -263,23 +320,23 @@ const STPage = ({ site }) => {
     <div>
  
 
-    <CTabs activeItemKey={activeTab} onActiveTabChange={setActiveTab}>
-      <CTabList variant="underline-border" color="success">
-        {tabs.map((tab) => (
-          <CTab
-            key={tab.key}
-            aria-controls={`tab-pane-${tab.key}`}
-            itemKey={tab.key}
-            className='tab-color align'
-          >
-            <img
-              src={activeTab === tab.key ? location_pinIcon : location_pin_greyIcon}
-              alt="Location Icon"
-              style={{ marginRight: '5px' }} // Adjust spacing as needed
-            />
-            {tab.label}
-          </CTab>
-        ))}
+        <CTabs activeItemKey={activeTab} onActiveTabChange={setActiveTab}>
+        <CTabList variant="underline-border" color="success">
+          {tabs.map((tab) => (
+            <CTab
+              key={tab.key}
+              aria-controls={`tab-pane-${tab.key}`}
+              itemKey={tab.key}
+              className="tab-color align"
+            >
+              <img
+                src={activeTab === tab.key ? location_pinIcon : location_pin_greyIcon}
+                alt="Location Icon"
+                style={{ marginRight: '5px' }}
+              />
+              {tab.label}
+            </CTab>
+          ))}
           <CButton
             color="success"
             className="ml-3 add-loc-btn"
@@ -287,22 +344,21 @@ const STPage = ({ site }) => {
           >
             <span style={{ fontSize: '30px', fontWeight: '200' }}>+</span>&nbsp;&nbsp; Add New Location
           </CButton>
-      </CTabList>
+        </CTabList>
 
-      <CTabContent>
-        {tabs.map((tab) => (
-          <CTabPanel
-            key={tab.key}
-            className="py-3"
-            aria-labelledby={`tab-pane-${tab.key}`}
-            itemKey={tab.key}
-          >
-            {tab.content}
-            <EventsTab profile={profile} />
-          </CTabPanel>
-        ))}
-      </CTabContent>
-    </CTabs>
+          <CTabContent>
+            {tabs.map((tab) => (
+              <CTabPanel
+                key={tab.key}
+                className="py-3"
+                aria-labelledby={`tab-pane-${tab.key}`}
+                itemKey={tab.key}
+              >
+                <EventsTab profile={profile} siteId={tab.siteId} siteIds={sites.map(s => s._id)} />
+              </CTabPanel>
+            ))}
+          </CTabContent>
+        </CTabs>
 
     
     </div>
@@ -334,48 +390,13 @@ const STPage = ({ site }) => {
     </CContainer> */}
 
 
-<PopupModelBaseVenue
+    <PopupModelBaseVenue
   visible={popupVisibleV}
   onClose={() => {
     setPopupVisibleV(false);
   }}
 >
-  <div>
-    <Select
-      value={selectedCountry}
-      onChange={handleCountryChange}
-      options={countries}
-      placeholder="Select Country"
-    />
-    <Select
-      value={selectedState}
-      onChange={handleStateChange}
-      options={states}
-      placeholder="Select State"
-      isDisabled={!selectedCountry}
-    />
-    <div
-      style={{
-        marginTop: 'auto',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        width: '100%',
-        paddingTop: '5%',
-      }}
-    >
-      <CButton
-        color="success"
-        style={{ color: 'white' }}
-        onClick={() => {
-          addNewTab(); // Add tab from inside the popup
-          closePopup(); // Close popup after adding the tab
-        }}
-        disabled={!selectedCountry || !selectedState}
-      >
-        Add Tab
-      </CButton>
-    </div>
-  </div>
+  {popupChildrenV}
 </PopupModelBaseVenue>
     </>
   )
@@ -383,34 +404,42 @@ const STPage = ({ site }) => {
 }
 
 
-const EventsTab = ({ profile }) => {
+const EventsTab = ({ profile, siteId, siteIds }) => {
   const [activeTab, setActiveTab] = useState(1); // Track the active tab
+
+  // Prepare the query object
+  const query = {
+    status: 'upcoming',
+    // If siteId is provided, use it; otherwise, use siteIds (array of all site IDs)
+    siteId: siteId,
+    siteIds: siteId ? undefined : siteIds,
+  };
 
   return (
     <CTabs activeItemKey={activeTab} onActiveTabChange={setActiveTab}>
       <CTabList variant="underline-border" color="success" className="tab-list-events">
-         <CTab aria-controls="all-events-pane" itemKey={1} className='tab-color-events'>
+        <CTab aria-controls="all-events-pane" itemKey={1} className="tab-color-events">
           Upcoming Events
         </CTab>
-        <CTab aria-controls="upcoming-tab-pane" itemKey={2} className='tab-color-events'>
+        <CTab aria-controls="upcoming-tab-pane" itemKey={2} className="tab-color-events">
           Past Events
         </CTab>
       </CTabList>
       <CTabContent>
         <CTabPanel className="py-3" aria-labelledby="all-events-pane" itemKey={1}>
           {profile ? (
-            <AllEventsTab query={{ siteId: profile.worksIn._id, status: 'upcoming' }} />
+            <AllEventsTab query={{ ...query, status: 'upcoming' }} profile={profile} />
           ) : (
-            <div style={{ justifyContent: 'center', alignContent: 'center', display: 'flex' }}>
+            <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
               <CSpinner color="primary" />
             </div>
           )}
         </CTabPanel>
         <CTabPanel className="py-3" aria-labelledby="upcoming-tab-pane" itemKey={2}>
           {profile ? (
-            <PastEventsTab query={{ siteId: profile.worksIn._id, status: 'completed' }} />
+            <PastEventsTab query={{ ...query, status: 'completed' }} profile={profile} />
           ) : (
-            <div style={{ justifyContent: 'center', alignContent: 'center', display: 'flex' }}>
+            <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
               <CSpinner color="primary" />
             </div>
           )}
@@ -421,23 +450,22 @@ const EventsTab = ({ profile }) => {
 };
 
 
-const AllEventsTab = ({ query ,event, onProceed,profile}) => {
-  const [eventsList, setEventsList] = React.useState([]);
-  const [popupVisibleW, setPopupVisibleW] = React.useState(false);
-  const [popupChildrenW, setPopupChildrenW] = React.useState(null);
-  const [popupVisible, setPopupVisible] = React.useState(false);
-  const [popupChildren, setPopupChildren] = React.useState(null);
 
+const AllEventsTab = ({ query, profile }) => {
+  const [eventsList, setEventsList] = useState([]);
+  const [popupVisibleW, setPopupVisibleW] = useState(false);
+  const [popupChildrenW, setPopupChildrenW] = useState(null);
+  const [isToggled, setIsToggled] = useState(true);
 
-  const [isToggled, setIsToggled] = useState(true); // Default is true
-
-  // Function to handle toggle changes
-  const handleToggle = () => {
-    setIsToggled(!isToggled);
+  
+  const handleToggle = (index, type) => {
+    const updatedToggles = [...toggles];
+    updatedToggles[index][type] = !updatedToggles[index][type];
+    setToggles(updatedToggles);
   };
 
+
   const loadEvents = () => {
-    // API call
     new VenuApiController().getAllEvents(query).then((res) => {
       if (res.message) {
         toast.error(res.message);
@@ -635,12 +663,6 @@ const AddSkipping = ({ siteId ,profile}) => {
     days.map(() => ({ status: true, limitQuantity: false })) // Initial state for toggles
   );
 
-  const handleToggle = (index, type) => {
-    const updatedToggles = [...toggles];
-    updatedToggles[index][type] = !updatedToggles[index][type];
-    setToggles(updatedToggles);
-  };
-
   const handleButtonClick = (index) => {
     // If an image is already selected, reset it
     if (selectedImages[index]) {
@@ -651,6 +673,14 @@ const AddSkipping = ({ siteId ,profile}) => {
       fileInputRefs.current[index].current.click(); // Trigger click on the hidden file input for this row
     }
   };
+
+  
+  const handleToggle = (index, type) => {
+    const updatedToggles = [...toggles];
+    updatedToggles[index][type] = !updatedToggles[index][type];
+    setToggles(updatedToggles);
+  };
+
 
   const handleFileChange = (event, index) => {
     const file = event.target.files[0];
@@ -1073,7 +1103,229 @@ const AddSESkip = ({ siteId }) => {
   );
 };
 
+const AddNewLocation = ({ onClose, onSiteCreated }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [logo, setLogo] = useState(null);
+  const fileInputRef = useRef(null);
 
+  // Country and State selection
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedState, setSelectedState] = useState(null);
+
+  const uploadLogoToFirebase = async (file) => {
+    try {
+      const storageRef = ref(storage, `logos/${file.name}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading logo to Firebase:", error);
+      throw error;
+    }
+  }
+
+  useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  const fetchCountries = () => {
+    fetch('https://countriesnow.space/api/v0.1/countries')
+      .then((response) => response.json())
+      .then((data) => {
+        const countryOptions = data.data.map((country) => ({
+          value: country.country,
+          label: country.country,
+        }));
+        setCountries(countryOptions);
+      })
+      .catch((error) => {
+        console.error('Error fetching countries: ', error);
+      });
+  };
+
+  const fetchStates = (countryName) => {
+    fetch('https://countriesnow.space/api/v0.1/countries/states', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: countryName }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.data && Array.isArray(data.data.states)) {
+          const stateOptions = data.data.states.map((state) => ({
+            value: state.name,
+            label: state.name,
+          }));
+          setStates(stateOptions);
+        } else {
+          setStates([]);
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching states: ', error);
+        setStates([]);
+      });
+  };
+
+  const handleCountryChange = (selectedOption) => {
+    setSelectedCountry(selectedOption);
+    setSelectedState(null);
+    fetchStates(selectedOption.label);
+  };
+
+  const handleStateChange = (selectedOption) => {
+    setSelectedState(selectedOption);
+  };
+
+  const handleFileChange = (e) => {
+    setLogo(e.target.files[0]);
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!name || !email || !phone || !logo || !selectedCountry || !selectedState) {
+      toast.warning('Please fill all required fields and upload a logo.');
+      return;
+    }
+
+    try {
+      // Upload logo to Firebase and get URL
+      const logoUrl = await uploadLogoToFirebase(logo);
+
+      const location = `${selectedState.label}, ${selectedCountry.label}`;
+
+      const payload = {
+        name,
+        email,
+        phone,
+        logo: logoUrl,
+        location,
+        skipping: true,  // Set default values or include fields as needed
+        ticketing: false,
+      };
+
+      const response = await new VenuApiController().createVenue(payload);
+      if (response) {
+        toast.success('Site created successfully.');
+        onSiteCreated(response);
+      }
+    } catch (error) {
+      toast.error('Failed to create site.');
+      console.error(error);
+    }
+  };
+
+  return (
+    <CForm className="w-100 px-4" onSubmit={handleSubmit}>
+      {/* Site Name */}
+      <div className="mb-3">
+        <h3 className="setting-label">Name</h3>
+        <CFormInput
+          onChange={(e) => setName(e.target.value)}
+          value={name}
+          placeholder="Enter site name"
+          size="lg"
+          className="setting-input"
+        />
+      </div>
+
+      {/* Email */}
+      <div className="mb-3">
+        <h3 className="setting-label">Email</h3>
+        <CFormInput
+          type="email"
+          onChange={(e) => setEmail(e.target.value)}
+          value={email}
+          placeholder="Enter email"
+          size="lg"
+          className="setting-input"
+        />
+      </div>
+
+      {/* Phone */}
+      <div className="mb-3">
+        <h3 className="setting-label">Phone</h3>
+        <CFormInput
+          onChange={(e) => setPhone(e.target.value)}
+          value={phone}
+          placeholder="Enter phone number"
+          size="lg"
+          className="setting-input"
+        />
+      </div>
+
+      {/* Country Selection */}
+      <div className="mb-3">
+        <h3 className="setting-label">Country</h3>
+        <Select
+          value={selectedCountry}
+          onChange={handleCountryChange}
+          options={countries}
+          placeholder="Select Country"
+        />
+      </div>
+
+      {/* State Selection */}
+      <div className="mb-3">
+        <h3 className="setting-label">State</h3>
+        <Select
+          value={selectedState}
+          onChange={handleStateChange}
+          options={states}
+          placeholder="Select State"
+          isDisabled={!selectedCountry}
+        />
+      </div>
+
+      {/* Logo Upload */}
+      <div className="mb-3">
+        <h3 className="setting-label">Logo</h3>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '100%' }}>
+          <input
+            type="text"
+            readOnly
+            value={logo ? logo.name : ''}
+            placeholder="No file chosen"
+            className="setting-input"
+          />
+          <button
+            type="button"
+            onClick={handleButtonClick}
+            className="setting-btn"
+          >
+            <img src={chosen_fileIcon} alt="Choose file" className="setting-input-img" />
+          </button>
+        </div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".jpg,.png,.gif"
+          style={{ display: 'none' }}
+        />
+      </div>
+
+      {/* Save and Cancel Buttons */}
+      <div style={{ padding: '15px 0px' }}>
+        <CButton color="success text-white" className="model-save-btn" type="submit">
+          Save
+        </CButton>
+        <CButton color="secondary" className="ml-2" onClick={onClose}>
+          Cancel
+        </CButton>
+      </div>
+    </CForm>
+  );
+};
 export default STPage
 
 
