@@ -23,7 +23,7 @@ export class VenuApiController {
 
   
 
-  async getAllEvents(query) {
+async getAllEvents(query) {
     let url = `/sites/events?`
     for (const key in query) {
       url += `${key}=${query[key]}&`
@@ -65,7 +65,7 @@ export class VenuApiController {
   }
 
   addTickets(id, data) {
-    return this.apiService.post(`/sites/event/${id}/ticket`, data)
+    return this.apiService.post(`/sites/event/${id}/ticket`, [data]);
   }
   updateTicket(id, data) {
     return this.apiService.put(`/sites/event/${id}/ticket`, data)

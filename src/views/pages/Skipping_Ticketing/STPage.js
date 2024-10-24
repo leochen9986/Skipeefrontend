@@ -424,7 +424,7 @@ const EventsTab = ({ profile, siteId, siteIds }) => {
 
   // Prepare the query object
   const query = {
-    status: 'upcoming',
+    status: ['upcoming', 'on hold'], 
     // If siteId is provided, use it; otherwise, use siteIds (array of all site IDs)
     siteId: siteId,
     siteIds: siteId ? undefined : siteIds,
@@ -481,124 +481,187 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
 
 
   const loadEvents = () => {
+    if (!query || Object.keys(query).length === 0) {
+      // If query is undefined or empty, don't send the API request
+      return;
+    }
+    
+
     new VenuApiController().getAllEvents(query).then((res) => {
-      if (res.message) {
-        toast.error(res.message);
-      } else {
+      if (res && !res.message) {
         setEventsList(res);
+      } else {
+        if (query) {
+          console.log(query.length); // Safely log the length if query exists
+        }
       }
     });
   };
 
   useEffect(() => {
-    loadEvents();
+    if (query) {
+      loadEvents();
+    }
   }, [query]);
 
   return (
     <>
       {eventsList.length === 0 ? (
-        <div style={{justifyContent:'center',alignContent:'center',display:'flex'}}>
-       
-       <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" width="60%"/> 
-       </div>
+        <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
+          <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" width="60%" />
+        </div>
       ) : (
-        eventsList.map((event, index) => (
-        <CContainer fluid className="container-events" key={index} >
-          <CRow className="events-row" >
-            <CCol md={6} className="events-col">
-              <CCard className="mb-3">
-                <CCardBody className='card-body-event'>
-                  <CRow>
-                    <CCol md={3} className="card-label" style={{width:'100%'}}>
-                    <div style={{width:'100%', height:'450%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-                      <strong style={{color:'#4E4E4E'}}>Event Name</strong> 
-                      <div style={{ display: 'flex', justifyContent: 'space-between' ,width:'100%'}}>
-                      <strong className="reported-by-text">{event.name}</strong> 
-                      <label className="toggle-container">
-                        <input
-                          type="checkbox"
-                          checked={isToggled}
-                          onChange={handleToggle}
-                          className="toggle-input"
-                        />
-                        <span className="toggle-slider"></span>
-                      </label> 
-                      
+        <CContainer fluid className="container-events">
+          <CRow className="events-row">
+            {eventsList.map((event, index) => (
+              <CCol md={4} className="events-col" key={index}>
+                <CCard className="mb-3">
+                  <CCardBody className="card-body-event">
+                    {/* Event Content */}
+                    <CRow>
+                      <CCol md={12} className="card-label" style={{ width: '100%' }}>
+                        {/* Image Display */}
+                        {event.image ? (
+                          <div style={{ width: '100%', height: '250px', marginBottom: '10px' }}>
+                            <img
+                              src={event.image}
+                              alt="Event"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                borderRadius: '8px',
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              width: '100%',
+                              height: '250px',
+                              backgroundColor: '#f4f4f4',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <span style={{ color: '#ccc', fontSize: '14px' }}>No Image Available</span>
+                          </div>
+                        )}
+  
+                        {/* Event Name and Toggle */}
+                        <div
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                          }}
+                        >
+                          <strong style={{ color: '#4E4E4E' }}>Event Name</strong>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                            <strong className="reported-by-text">{event.name}</strong>
+                            <label className="toggle-container">
+                              <input
+                                type="checkbox"
+                                checked={isToggled}
+                                onChange={handleToggle}
+                                className="toggle-input"
+                              />
+                              <span className="toggle-slider"></span>
+                            </label>
+                          </div>
+                        </div>
+                      </CCol>
+                    </CRow>
+                  </CCardBody>
+                  <CCardFooter className="card-footer">
+                    <div style={{ padding: '3% 0px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span className="footer-label">Date</span>
+                        <span className="footer-content">
+                          {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })}
+                        </span>
                       </div>
-                      </div>
-                    </CCol>
-                  </CRow>
-                </CCardBody>
-                <CCardFooter className="card-footer"> {/* Added class for custom styles */}
-                  <div style={{ padding:'3% 0px'}}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span className='footer-label'>Date</span>
-                      <span className='footer-content'>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                      {event.tickets.map((ticket, ticketIndex) => (
+                        <div key={ticketIndex}>
+                          <div className="footer-space">
+                            <span className="footer-label">Price</span>
+                            <span className="footer-content">
+                              £{parseFloat(ticket.price).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="footer-space">
+                            <span className="footer-label">
+                              <img
+                                src={opening_timeIcon}
+                                style={{ height: '13px', width: '13px' }}
+                                alt="Opening Time"
+                              />{' '}
+                              Opening Time
+                            </span>
+                            <span className="footer-content">
+                              {event.startTime} - {event.endTime}
+                            </span>
+                          </div>
+                          <div className="footer-space">
+                            <span className="footer-label">
+                              <img
+                                src={last_entryIcon}
+                                style={{ height: '13px', width: '13px' }}
+                                alt="Last Entry"
+                              />{' '}
+                              Last Entry
+                            </span>
+                            <span className="footer-content">{/* Last entry data here */}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    {event.tickets.map((ticket, ticketIndex) => (
-                      <div key={ticketIndex}>
-                        <div className='footer-space'>
-                          <span className='footer-label'>Price</span>
-                          <span className='footer-content'>£{parseFloat(ticket.price).toFixed(2)}</span>
-                        </div>
-                        <div className='footer-space'>
-                          <span className='footer-label'><img src={opening_timeIcon} style={{ height: '13px', width: '13px' }} /> Opening Time</span>
-                          <span className='footer-content'>{event.startTime} - {event.endTime}</span>
-                        </div>
-                        <div className='footer-space'>
-                          <span className='footer-label'><img src={last_entryIcon} style={{ height: '13px', width: '13px' }} /> Last Entry</span>
-                          <span className='footer-content'>{/* Last entry data here */}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CCardFooter>
-              </CCard>
-            </CCol>
+                  </CCardFooter>
+                </CCard>
+              </CCol>
+            ))}
           </CRow>
         </CContainer>
-        
-
-        
-        ))
       )}
-
-<div className='add-events-btn' >
-      <CButton
-        color="success text-white"
-        siteId={siteId}
-        onClick={() => {
-          setPopupChildrenW(<AddSkipping siteId={siteId} />);
-          setPopupVisibleW(true);
-        }}
-
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          borderRadius: '15px',
-          padding: '0px 20px',
-          backgroundColor: 'black',
-          border: 'none',
-          height: '43px',
-        }}
-      >
-        Add Skipping
-        <span style={{ fontSize: '2rem', marginLeft: '5px', fontWeight: '200' }}>+</span>
-      </CButton>
-    </div>
-
-    <PopupModelBaseWidth
+  
+      {/* Add Events Button and Popup */}
+      <div className="add-events-btn">
+        <CButton
+          color="success text-white"
+          siteId={siteId}
+          onClick={() => {
+            setPopupChildrenW(<AddSkipping siteId={siteId} />);
+            setPopupVisibleW(true);
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            borderRadius: '15px',
+            padding: '0px 20px',
+            backgroundColor: 'black',
+            border: 'none',
+            height: '43px',
+          }}
+        >
+          Add Skipping
+          <span style={{ fontSize: '2rem', marginLeft: '5px', fontWeight: '200' }}>+</span>
+        </CButton>
+      </div>
+  
+      <PopupModelBaseWidth
         visible={popupVisibleW}
         onClose={() => {
-          setPopupVisibleW(false)
+          setPopupVisibleW(false);
         }}
         title="Add Skipping"
         children={popupChildrenW}
       />
     </>
-    
   );
   
 };
@@ -609,10 +672,12 @@ const PastEventsTab = ({ query, event, onProceed }) => {
   const loadEvents = () => {
     // API call
     new VenuApiController().getAllEvents(query).then((res) => {
-      if (res.message) {
-        toast.error(res.message);
-      } else {
+      if (res && !res.message) {
         setEventsList(res);
+      } else {
+        if (query) {
+          console.log(query.length); // Safely log the length if query exists
+        }
       }
     });
   };
@@ -680,7 +745,8 @@ const AddSkipping = ({ siteId }) => {
       try {
         const res = await new VenuApiController().getAllEvents({ siteId });
         if (res.message) {
-          toast.error(res.message);
+          // toast.error(res.message);
+          console.log("noevent");
         } else {
           // Initialize eventsByDay with empty arrays for each day
           const eventsByDayTemp = {};
@@ -752,7 +818,7 @@ const AddSkipping = ({ siteId }) => {
         startTime: updatedEvent.startTime,
         endTime: updatedEvent.endTime,
         lastEntryTime: updatedEvent.lastEntryTime,
-        status: updatedEvent.status ? 'upcoming' : 'completed',
+        status: updatedEvent.status ? 'upcoming' : 'on hold',
         image: updatedEvent.image,
         limitQuantity: updatedEvent.limitQuantity,
       };
@@ -775,14 +841,14 @@ const AddSkipping = ({ siteId }) => {
         toast.success('Event updated successfully.');
       }
     } catch (error) {
-      toast.error('Failed to update event.');
+      // toast.error('Failed to update event.');
       console.error(error);
     }
   };
 
   const handleToggleChange = (eventId, field, value) => {
     handleInputChange(eventId, field, value);
-    handleSave(eventId);
+    // handleSave(eventId);
   };
 
   const handleButtonClick = (eventId) => {
@@ -802,7 +868,7 @@ const AddSkipping = ({ siteId }) => {
         handleInputChange(eventId, 'image', downloadURL);
 
         // Save the event to the backend
-        await handleSave(eventId);
+        // await handleSave(eventId);
       } catch (error) {
         toast.error('Failed to upload image');
         console.error(error);
@@ -824,7 +890,7 @@ const AddSkipping = ({ siteId }) => {
       handleInputChange(eventId, 'image', null);
 
       // Save the event to the backend
-      await handleSave(eventId);
+      // await handleSave(eventId);
     } catch (error) {
       toast.error('Failed to delete image');
       console.error(error);
@@ -1154,7 +1220,6 @@ const EnterQuantity = () => {
   )
 }
 
-
 const AddSESkip = ({ siteId, onEventAdded }) => {
   const [name, setName] = useState('');
   const [date, setDate] = useState(null); // Use null to start with no date selected
@@ -1165,6 +1230,8 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
   const [lastEntryTime, setLastEntryTime] = useState('');
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  console.log(siteId);
 
   // Handle file upload to Firebase
   const uploadImageToFirebase = async (file) => {
@@ -1222,7 +1289,7 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
         endTime: openingEndTime,
         lastEntryTime,
         image: imageUrl,
-        site: siteId,
+        siteId: siteId,
         status: 'upcoming',
       };
 
@@ -1231,6 +1298,10 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
       if (eventResponse && !eventResponse.message) {
         const eventId = eventResponse._id;
 
+        // Calculate saleStartTime and saleEndTime
+        const saleStartTime = new Date(`${date.toDateString()} ${openingTime}`);
+        const saleEndTime = new Date(`${date.toDateString()} ${openingEndTime}`);
+
         // Prepare ticket data
         const ticketData = {
           name: 'Skip Ticket', // Customize as needed
@@ -1238,6 +1309,8 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
           price: parseFloat(price),
           totalQuantity: parseInt(tickets),
           availableQuantity: parseInt(tickets),
+          saleStartTime: saleStartTime.toISOString(),
+          saleEndTime: saleEndTime.toISOString(),
         };
 
         // Add the ticket to the event

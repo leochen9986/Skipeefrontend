@@ -82,6 +82,7 @@ const EventCard = ({ event }) => {
   const [popupVisible, setPopupVisible] = useState(false)
   const [popupChildren, setPopupChildren] = useState(null)
   const eventDate = new Date(event.date)
+  console.log(eventDate);
   const formattedDate = eventDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
   const nav = useNavigate()
 

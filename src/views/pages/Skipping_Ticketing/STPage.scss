@@ -46,24 +46,25 @@ body, html {
   }
   
 
+  .container-events {
+    width: 95%;
+    margin-right: 4%;
+    justify-content: flex-start;
+    /* Removed display: grid; since we're using Bootstrap grid system */
+  }
+  
   .events-row {
-    display: flex;          
-    flex-wrap: nowrap;      
-    overflow-x: auto;    
-               
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* Adjust as needed */
+    gap: 1rem; /* Space between columns */
   }
   
   .events-col {
-    flex: 0 0 auto;         
-    min-width: 300px;       
-    width: 380px;
-  }
-
-  .container-events{
-    width: 95%;
-    justify-content: flex-start;
-    margin-right: 4%;
-
+    /* Using Bootstrap's grid system, so additional flex properties may not be necessary */
+    min-width: 300px;
+    max-width: 380px;
+    margin-bottom: 1rem; /* Space between rows */
   }
 
   .add-events-btn{

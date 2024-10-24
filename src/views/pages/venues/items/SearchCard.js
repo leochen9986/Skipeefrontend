@@ -109,6 +109,8 @@ const SingleVenueItem = ({ index, event }) => {
   const handleClosePopup = () => {
     setShowTicketPopup(false)
   }
+  const eventDate = new Date(event.date)
+  const formattedDate = eventDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
 
   return (
     <>
@@ -213,21 +215,14 @@ const SingleVenueItem = ({ index, event }) => {
         {/* ))} */}
       </CRow>
 
-      {showTicketPopup && (
-        // <TicketPopup
-        //   tickets={event.tickets}
-        //   onClose={handleClosePopup}
-        //   onProceed={handleProceed}
-        //   event={event}
-        // />
+      {showTicketPopup && event.tickets && (
         <TicketPopup
-          tickets={fakeEvent.tickets}
+          tickets={event.tickets}
           onClose={handleClosePopup}
           onProceed={handleProceed}
-          event={fakeEvent}
+          event={event}
         />
       )}
-
 
       <PopupModelBase
         visible={popupVisible}
@@ -244,9 +239,25 @@ const SingleVenueItem = ({ index, event }) => {
     </>
   )
 }
-
+            {/* .filter(
+              (ticket) =>
+                new Date(ticket.saleStartTime) < new Date() &&
+                new Date(ticket.saleEndTime) > new Date(),
+            ) */}
 const TicketPopup = ({ tickets, onClose, onProceed, event }) => {
   const [selectedTicket, setSelectedTicket] = useState(null)
+  console.log(tickets);
+
+  tickets.filter((ticket) => {
+    console.log('Ticket:', ticket);
+    console.log('saleStartTime:', ticket.saleStartTime, 'Parsed:', new Date(ticket.saleStartTime));
+    console.log('saleEndTime:', ticket.saleEndTime, 'Parsed:', new Date(ticket.saleEndTime));
+  
+    return (
+      new Date(ticket.saleStartTime) < new Date() &&
+      new Date(ticket.saleEndTime) > new Date()
+    );
+  })
 
   return (
     <div className="ticket-popup-overlay" >
@@ -254,12 +265,9 @@ const TicketPopup = ({ tickets, onClose, onProceed, event }) => {
         <h2  style={{fontWeight:'bold'}}>Select a Ticket</h2>
         <div className="ticket-list" >
           {tickets
-            .filter(
-              (ticket) =>
-                new Date(ticket.saleStartTime) < new Date() &&
-                new Date(ticket.saleEndTime) > new Date(),
-            )
+
             .map((ticket) => (
+              
               <div
                 key={ticket._id}
                 className={`ticket-item ${selectedTicket === ticket._id ? 'selected' : ''}`}

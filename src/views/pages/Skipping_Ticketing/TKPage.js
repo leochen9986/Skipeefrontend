@@ -469,7 +469,8 @@ const AllEventsTab = ({ query, profile }) => {
     // API call
     new VenuApiController().getAllEvents(query).then((res) => {
       if (res.message) {
-        toast.error(res.message);
+        console.log("None")
+        // toast.error(res.message);
       } else {
         setEventsList(res);
       }
