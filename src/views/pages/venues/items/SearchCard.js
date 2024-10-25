@@ -240,13 +240,20 @@ const SearchCard = ({ event}) => {
 
 const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
   const [selectedTicket, setSelectedTicket] = useState(null)
+  console.log(new Date(tickets[0].saleStartTime));
+  console.log(new Date());
 
   return (
     <div className="ticket-popup-overlay" >
       <div className="ticket-popup">
         <h2  style={{fontWeight:'bold'}}>Select a Ticket</h2>
         <div className="ticket-list" >
-          {tickets
+        {tickets
+            .filter(
+              (ticket) =>
+                new Date(ticket.saleStartTime) < new Date() &&
+                new Date(ticket.saleEndTime) > new Date(),
+            )
 
             .map((ticket) => (
               <div

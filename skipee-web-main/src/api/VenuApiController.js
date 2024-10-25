@@ -47,11 +47,12 @@ export class VenuApiController {
     return this.apiService.put(`/sites/event/${id}`, data)
   }
 
-  addTickets(id, data) {
-    return this.apiService.post(`/sites/event/${id}/ticket`, data)
+  addTicket(eventId, data) {
+    return this.apiService.post(`/sites/event/${eventId}/ticket`, data);
   }
-  updateTicket(id, data) {
-    return this.apiService.put(`/sites/event/${id}/ticket`, data)
+  
+  updateTicket(ticketId, data) {
+    return this.apiService.put(`/sites/event/ticket/${ticketId}`, data);
   }
 
   deleteTickets(ticketId) {

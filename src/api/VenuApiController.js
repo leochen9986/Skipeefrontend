@@ -67,6 +67,13 @@ async getAllEvents(query) {
   addTickets(id, data) {
     return this.apiService.post(`/sites/event/${id}/ticket`, [data]);
   }
+
+  
+  addTicket(eventId, data) {
+    return this.apiService.post(`/sites/event/${eventId}/ticket`, data);
+  }
+  
+  
   updateTicket(id, data) {
     return this.apiService.put(`/sites/event/${id}/ticket`, data)
   }

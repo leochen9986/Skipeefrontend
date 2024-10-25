@@ -726,60 +726,77 @@ const PastEventsTab = ({ query, event, onProceed }) => {
   );
 };
 
-
-
 const AddSkipping = ({ siteId }) => {
   const [eventData, setEventData] = useState({});
-  const [eventsByDay, setEventsByDay] = useState({});
   const [loading, setLoading] = useState(true);
   const [popupVisible, setPopupVisible] = useState(false);
   const [popupChildren, setPopupChildren] = useState(null);
   const [popupTitle, setPopupTitle] = useState('');
   const fileInputRefs = useRef({});
 
-  // Days of the week starting from Sunday (getDay() returns 0-6, Sunday to Saturday)
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  // Adjusted daysOfWeek array
+  const daysOfWeek = [
+    { name: 'Monday', index: 1 },
+    { name: 'Tuesday', index: 2 },
+    { name: 'Wednesday', index: 3 },
+    { name: 'Thursday', index: 4 },
+    { name: 'Friday', index: 5 },
+    { name: 'Saturday', index: 6 },
+    { name: 'Sunday', index: 0 },
+  ];
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const res = await new VenuApiController().getAllEvents({ siteId });
-        if (res.message) {
-          // toast.error(res.message);
-          console.log("noevent");
-        } else {
-          // Initialize eventsByDay with empty arrays for each day
-          const eventsByDayTemp = {};
-          daysOfWeek.forEach((day) => {
-            eventsByDayTemp[day] = [];
-          });
 
-          // Initialize eventData
-          const initialEventData = {};
+        // Initialize eventData
+        const initialEventData = {};
 
+        // Initialize eventsByDay with empty data for each day
+        daysOfWeek.forEach(({ name: dayName, index: dayIndex }) => {
+          initialEventData[dayName] = {
+            name: '',
+            startTime: '',
+            endTime: '',
+            price: '',
+            lastEntryTime: '',
+            limitQuantity: false,
+            status: false, // Toggle off by default
+            image: null,
+            quantity: 300, // Default quantity
+            tickets: [],
+            eventId: null,
+            isExistingEvent: false,
+          };
+        });
+
+        if (res && !res.message) {
           // Group events by day of the week and initialize eventData
           res.forEach((event) => {
             const eventDate = new Date(event.date);
-            const dayName = daysOfWeek[eventDate.getDay()];
-            eventsByDayTemp[dayName].push(event);
-
-            initialEventData[event._id] = {
-              name: event.name,
-              startTime: event.startTime,
-              endTime: event.endTime,
-              price: event.tickets?.[0]?.price || '',
-              lastEntryTime: event.lastEntryTime || '',
-              limitQuantity: event.limitQuantity || false,
-              status: event.status === 'upcoming',
-              image: event.image || null,
-              quantity: event.tickets?.[0]?.totalQuantity || '',
-              tickets: event.tickets,
-            };
+            const dayIndex = eventDate.getDay();
+            const dayName = daysOfWeek.find((day) => day.index === dayIndex)?.name;
+            if (dayName) {
+              initialEventData[dayName] = {
+                name: event.name,
+                startTime: event.startTime,
+                endTime: event.endTime,
+                price: event.tickets?.[0]?.price || '',
+                lastEntryTime: event.lastEntryTime || '',
+                limitQuantity: event.limitQuantity || false,
+                status: event.status === 'upcoming',
+                image: event.image || null,
+                quantity: event.tickets?.[0]?.totalQuantity || 300, // Use existing quantity or default
+                tickets: event.tickets,
+                eventId: event._id,
+                isExistingEvent: true,
+              };
+            }
           });
-
-          setEventsByDay(eventsByDayTemp);
-          setEventData(initialEventData);
         }
+
+        setEventData(initialEventData);
       } catch (error) {
         toast.error('Failed to load events');
         console.error('Error fetching events:', error);
@@ -791,73 +808,31 @@ const AddSkipping = ({ siteId }) => {
     fetchEvents();
   }, [siteId]);
 
-  const handleInputChange = (eventId, field, value) => {
+  const handleInputChange = (dayName, field, value) => {
     setEventData((prevData) => ({
       ...prevData,
-      [eventId]: {
-        ...prevData[eventId],
+      [dayName]: {
+        ...prevData[dayName],
         [field]: value,
       },
     }));
   };
-
-  const handleSaveAll = async () => {
-    // Save all events
-    for (const eventId of Object.keys(eventData)) {
-      await handleSave(eventId, false); // Pass false to prevent multiple toasts
-    }
-    toast.success('All changes saved successfully.');
-  };
-
-  const handleSave = async (eventId, showToast = true) => {
-    const updatedEvent = eventData[eventId];
-    try {
-      // Prepare data for API call
-      const eventUpdateData = {
-        name: updatedEvent.name,
-        startTime: updatedEvent.startTime,
-        endTime: updatedEvent.endTime,
-        lastEntryTime: updatedEvent.lastEntryTime,
-        status: updatedEvent.status ? 'upcoming' : 'on hold',
-        image: updatedEvent.image,
-        limitQuantity: updatedEvent.limitQuantity,
-      };
-
-      // Update event details
-      await new VenuApiController().updateEvent(eventId, eventUpdateData);
-
-      // Update ticket price if necessary
-      if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
-        const ticketId = updatedEvent.tickets[0]._id;
-        const ticketUpdateData = {
-          price: updatedEvent.price,
-          totalQuantity: updatedEvent.quantity,
-          availableQuantity: updatedEvent.quantity, // Adjust as needed
-        };
-        await new VenuApiController().updateEventTicket(ticketId, ticketUpdateData);
-      }
-
-      if (showToast) {
-        toast.success('Event updated successfully.');
-      }
-    } catch (error) {
-      // toast.error('Failed to update event.');
-      console.error(error);
+  const handleToggleChange = (dayName, field, value) => {
+    handleInputChange(dayName, field, value);
+  
+    if (field === 'limitQuantity' && !value) {
+      // When limitQuantity is toggled off, clear the quantity
+      handleInputChange(dayName, 'quantity', '');
     }
   };
 
-  const handleToggleChange = (eventId, field, value) => {
-    handleInputChange(eventId, field, value);
-    // handleSave(eventId);
-  };
-
-  const handleButtonClick = (eventId) => {
-    if (fileInputRefs.current[eventId]) {
-      fileInputRefs.current[eventId].click();
+  const handleButtonClick = (dayName) => {
+    if (fileInputRefs.current[dayName]) {
+      fileInputRefs.current[dayName].click();
     }
   };
 
-  const handleFileChange = async (e, eventId) => {
+  const handleFileChange = async (e, dayName) => {
     const file = e.target.files[0];
     if (file) {
       try {
@@ -865,10 +840,7 @@ const AddSkipping = ({ siteId }) => {
         const downloadURL = await uploadImageToFirebase(file);
 
         // Update the local state
-        handleInputChange(eventId, 'image', downloadURL);
-
-        // Save the event to the backend
-        // await handleSave(eventId);
+        handleInputChange(dayName, 'image', downloadURL);
       } catch (error) {
         toast.error('Failed to upload image');
         console.error(error);
@@ -883,17 +855,161 @@ const AddSkipping = ({ siteId }) => {
     return downloadURL;
   };
 
-  const handleDeleteImage = async (eventId) => {
-    try {
-      // Remove image from Firebase if necessary
-      // Update the local state
-      handleInputChange(eventId, 'image', null);
+  const handleDeleteImage = (dayName) => {
+    // Remove image from state
+    handleInputChange(dayName, 'image', null);
+  };
 
-      // Save the event to the backend
-      // await handleSave(eventId);
+  const handleSave = async (dayName, showToast = true) => {
+    const updatedEvent = eventData[dayName];
+    try {
+      if (updatedEvent.status) {
+        // Validate required fields
+        const requiredFields = ['name', 'startTime', 'endTime', 'price'];
+        const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
+
+        if (missingFields.length > 0) {
+          toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+          return;
+        }
+      }
+
+      if (updatedEvent.eventId) {
+        // Update existing event
+        const eventUpdateData = {
+          name: updatedEvent.name,
+          startTime: updatedEvent.startTime,
+          endTime: updatedEvent.endTime,
+          lastEntryTime: updatedEvent.lastEntryTime,
+          status: updatedEvent.status ? 'upcoming' : 'on hold',
+          image: updatedEvent.image,
+          limitQuantity: updatedEvent.limitQuantity,
+        };
+
+        await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
+
+        // Update ticket if necessary
+        if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
+          const ticketId = updatedEvent.tickets[0]._id;
+          const ticketUpdateData = {
+            name: 'Skip Ticket', // or use updatedEvent.tickets[0].name if available
+            type: 'skip',        // or use updatedEvent.tickets[0].type
+            price: parseFloat(updatedEvent.price),
+            totalQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            availableQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+            saleEndTime: getSaleEndTime(dayName, updatedEvent.endTime).toISOString(),
+          };
+          await new VenuApiController().updateTicket(ticketId, ticketUpdateData);
+        }
+
+        if (showToast) {
+          toast.success('Event updated successfully.');
+        }
+      } else if (updatedEvent.status) {
+        // Create new event
+        const eventDataToCreate = {
+          name: updatedEvent.name,
+          startTime: updatedEvent.startTime,
+          endTime: updatedEvent.endTime,
+          lastEntryTime: updatedEvent.lastEntryTime,
+          image: updatedEvent.image,
+          limitQuantity: updatedEvent.limitQuantity,
+          status: 'upcoming',
+          siteId: siteId,
+          date: getNextDateOfDay(dayName).toISOString(),
+        };
+
+        const eventResponse = await new VenuApiController().createEvent(eventDataToCreate);
+        if (eventResponse && !eventResponse.message) {
+          const eventId = eventResponse._id;
+          // Create ticket for the new event
+          const ticketResponse = await createTicketForEvent(eventId, updatedEvent, dayName);
+
+          if (ticketResponse) {
+            if (showToast) {
+              toast.success('Event and ticket created successfully.');
+            }
+            // Update eventData with new eventId and ticket
+            setEventData((prevData) => ({
+              ...prevData,
+              [dayName]: {
+                ...prevData[dayName],
+                eventId: eventId,
+                isExistingEvent: true,
+                tickets: [ticketResponse],
+              },
+            }));
+          } else {
+            toast.error('Failed to create event ticket.');
+          }
+        } else {
+          toast.error('Failed to create event.');
+        }
+      }
     } catch (error) {
-      toast.error('Failed to delete image');
       console.error(error);
+      toast.error('Failed to save event.');
+    }
+  };
+
+  const handleSaveAll = async () => {
+    for (const dayName of Object.keys(eventData)) {
+      await handleSave(dayName, false);
+    }
+    toast.success('All changes saved successfully.');
+  };
+
+  const getNextDateOfDay = (dayName) => {
+    const dayIndex = daysOfWeek.find((day) => day.name === dayName).index;
+    const today = new Date();
+    const todayIndex = today.getDay();
+    let daysAhead = (dayIndex - todayIndex + 7) % 7;
+    if (daysAhead === 0) daysAhead = 7; // Always get the next week
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + daysAhead);
+    return nextDate;
+  };
+
+  const getSaleStartTime = (dayName, startTime) => {
+    const nextDate = getNextDateOfDay(dayName);
+    const [hours, minutes] = startTime.split(':');
+    nextDate.setHours(hours, minutes, 0, 0);
+    return nextDate;
+  };
+
+  const getSaleEndTime = (dayName, endTime) => {
+    const nextDate = getNextDateOfDay(dayName);
+    const [hours, minutes] = endTime.split(':');
+    nextDate.setHours(hours, minutes, 0, 0);
+    return nextDate;
+  };
+
+  const createTicketForEvent = async (eventId, updatedEvent, dayName) => {
+    try {
+      const ticketData = {
+        name: 'Skip Ticket',
+        type: 'skip',
+        price: parseFloat(updatedEvent.price),
+        totalQuantity: updatedEvent.limitQuantity
+          ? parseInt(updatedEvent.quantity) || 300
+          : 999999,
+        availableQuantity: updatedEvent.limitQuantity
+          ? parseInt(updatedEvent.quantity) || 300
+          : 999999,
+        saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+        saleEndTime: getSaleEndTime(dayName, updatedEvent.endTime).toISOString(),
+      };
+  
+      const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
+      return ticketResponse;
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+      return null;
     }
   };
 
@@ -918,183 +1034,216 @@ const AddSkipping = ({ siteId }) => {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {daysOfWeek.map((day, index) => (
-              <React.Fragment key={index}>
-                {/* Check if there are events on this day */}
-                {eventsByDay[day] && eventsByDay[day].length > 0 ? (
-                  eventsByDay[day].map((event, eventIndex) => (
-                    <CTableRow key={`${index}-${eventIndex}`}>
-                      {/* Only show the day name for the first event of the day */}
-                      {eventIndex === 0 ? (
-                        <CTableDataCell rowSpan={eventsByDay[day].length}>{day}</CTableDataCell>
-                      ) : null}
-                      <CTableDataCell>
-                        <CFormInput
-                          value={eventData[event._id]?.name}
-                          onChange={(e) => handleInputChange(event._id, 'name', e.target.value)}
-                          onBlur={() => handleSave(event._id)}
-                          className="event-name-input"
-                        />
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {/* Status toggle */}
-                        <label className="toggle-container">
-                          <input
-                            type="checkbox"
-                            checked={eventData[event._id]?.status}
-                            onChange={(e) =>
-                              handleToggleChange(event._id, 'status', e.target.checked)
-                            }
-                            className="toggle-input"
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                          <CFormInput
-                            value={eventData[event._id]?.startTime}
-                            onChange={(e) =>
-                              handleInputChange(event._id, 'startTime', e.target.value)
-                            }
-                            onBlur={() => handleSave(event._id)}
-                            placeholder="Start Time"
-                            className="start-time-input"
-                          />
-                          <CFormInput
-                            value={eventData[event._id]?.endTime}
-                            onChange={(e) =>
-                              handleInputChange(event._id, 'endTime', e.target.value)
-                            }
-                            onBlur={() => handleSave(event._id)}
-                            placeholder="End Time"
-                            className="end-time-input"
-                          />
-                        </div>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CFormInput
-                          type="number"
-                          value={eventData[event._id]?.price}
-                          onChange={(e) => handleInputChange(event._id, 'price', e.target.value)}
-                          onBlur={() => handleSave(event._id)}
-                          className="price-input"
-                        />
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CFormInput
-                          value={eventData[event._id]?.lastEntryTime}
-                          onChange={(e) =>
-                            handleInputChange(event._id, 'lastEntryTime', e.target.value)
-                          }
-                          onBlur={() => handleSave(event._id)}
-                          className="last-entry-input"
-                        />
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {/* Limit Quantity toggle */}
-                        <label className="toggle-container">
-                          <input
-                            type="checkbox"
-                            checked={eventData[event._id]?.limitQuantity}
-                            onChange={(e) =>
-                              handleToggleChange(event._id, 'limitQuantity', e.target.checked)
-                            }
-                            className="toggle-input"
-                          />
-                          <span className="toggle-slider"></span>
-                        </label>
-                        {eventData[event._id]?.limitQuantity && (
-                          <CButton
-                            size="sm"
-                            style={{ marginLeft: '5px', backgroundColor: 'transparent' }}
-                            onClick={() => {
-                              setPopupTitle('Enter Quantity');
-                              setPopupChildren(
-                                <EnterQuantity
-                                  eventId={event._id}
-                                  initialQuantity={eventData[event._id]?.quantity || ''}
-                                  onSave={async (quantity) => {
-                                    handleInputChange(event._id, 'quantity', quantity);
-                                    await handleSave(event._id);
-                                    setPopupVisible(false);
-                                  }}
-                                />
-                              );
-                              setPopupVisible(true);
-                            }}
-                          >
-                            <img src={editIcon} style={{ width: '15px', height: '15px' }} alt="Edit" />
-                          </CButton>
-                        )}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {/* Event Image */}
-                        {eventData[event._id]?.image ? (
-                          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                            <img
-                              src={eventData[event._id].image}
-                              alt="Event"
-                              style={{
-                                width: 'auto',
-                                height: '50px',
-                                objectFit: 'cover',
-                                border: '5px solid #EDEDEE',
-                                borderRadius: '10px',
+            {daysOfWeek.map(({ name: dayName }) => {
+              const event = eventData[dayName];
+              const isDisabled = !event.status;
+
+              return (
+                <CTableRow key={dayName}>
+                  {/* Day Name */}
+                  <CTableDataCell>{dayName}</CTableDataCell>
+                  {/* Event Name */}
+                  <CTableDataCell>
+                    <CFormInput
+                      value={event.name}
+                      onChange={(e) => handleInputChange(dayName, 'name', e.target.value)}
+                      placeholder="Event Name"
+                      disabled={isDisabled}
+                      style={{ backgroundColor: isDisabled ? '#f0f0f0' : 'white' }}
+                    />
+                  </CTableDataCell>
+                  {/* Status Toggle */}
+                  <CTableDataCell>
+                    <label className="toggle-container">
+                      <input
+                        type="checkbox"
+                        checked={event.status}
+                        onChange={(e) => handleToggleChange(dayName, 'status', e.target.checked)}
+                        className="toggle-input"
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </CTableDataCell>
+                  {/* Opening Times */}
+                  <CTableDataCell>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      {/* Start Time Picker */}
+                      <DatePicker
+                        selected={
+                          event.startTime
+                            ? new Date(`1970-01-01T${event.startTime}:00`)
+                            : null
+                        }
+                        onChange={(date) => {
+                          const timeString = date.toTimeString().slice(0, 5);
+                          handleInputChange(dayName, 'startTime', timeString);
+                        }}
+                        showTimeSelect
+                        showTimeSelectOnly
+                        timeIntervals={15}
+                        timeCaption="Start Time"
+                        dateFormat="HH:mm"
+                        disabled={isDisabled}
+                        placeholderText="Start Time"
+                      />
+                      {/* End Time Picker */}
+                      <DatePicker
+                        selected={
+                          event.endTime
+                            ? new Date(`1970-01-01T${event.endTime}:00`)
+                            : null
+                        }
+                        onChange={(date) => {
+                          const timeString = date.toTimeString().slice(0, 5);
+                          handleInputChange(dayName, 'endTime', timeString);
+                        }}
+                        showTimeSelect
+                        showTimeSelectOnly
+                        timeIntervals={15}
+                        timeCaption="End Time"
+                        dateFormat="HH:mm"
+                        disabled={isDisabled}
+                        placeholderText="End Time"
+                      />
+                    </div>
+                  </CTableDataCell>
+                  {/* Price */}
+                  <CTableDataCell>
+                    <CFormInput
+                      type="number"
+                      value={event.price}
+                      onChange={(e) => handleInputChange(dayName, 'price', e.target.value)}
+                      disabled={isDisabled}
+                      placeholder="Price"
+                      style={{ backgroundColor: isDisabled ? '#f0f0f0' : 'white' }}
+                    />
+                  </CTableDataCell>
+                  {/* Last Entry Time */}
+                  <CTableDataCell>
+                    <DatePicker
+                      selected={
+                        event.lastEntryTime
+                          ? new Date(`1970-01-01T${event.lastEntryTime}:00`)
+                          : null
+                      }
+                      onChange={(date) => {
+                        const timeString = date.toTimeString().slice(0, 5);
+                        handleInputChange(dayName, 'lastEntryTime', timeString);
+                      }}
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeCaption="Last Entry Time"
+                      dateFormat="HH:mm"
+                      disabled={isDisabled}
+                      placeholderText="Last Entry Time"
+                    />
+                  </CTableDataCell>
+                  {/* Limit Quantity */}
+                  <CTableDataCell>
+                    <label className="toggle-container">
+                    <input
+                      type="checkbox"
+                      checked={event.limitQuantity}
+                      onChange={(e) =>
+                        handleToggleChange(dayName, 'limitQuantity', e.target.checked)
+                      }
+                      className="toggle-input"
+                      disabled={isDisabled}
+                    />
+                      <span className="toggle-slider"></span>
+                    </label>
+                    {event.limitQuantity && !isDisabled && (
+                      <CButton
+                        size="sm"
+                        style={{ marginLeft: '5px', backgroundColor: 'transparent' }}
+                        onClick={() => {
+                          setPopupTitle('Enter Quantity');
+                          setPopupChildren(
+                            <EnterQuantity
+                              initialQuantity={event.quantity || 300}
+                              onSave={(quantity) => {
+                                handleInputChange(dayName, 'quantity', quantity);
+                                setPopupVisible(false);
                               }}
                             />
-                            <CButton
-                              size="l"
-                              style={{ backgroundColor: '#E31B54' }}
-                              onClick={() => handleDeleteImage(event._id)}
-                            >
-                              <img
-                                src={deleteIcon}
-                                alt="Delete file"
-                                style={{ width: '15px', height: '15px' }}
-                              />
-                            </CButton>
-                          </div>
-                        ) : (
-                          <>
-                            <CButton
-                              size="l"
-                              style={{ backgroundColor: '#EDEDEE' }}
-                              onClick={() => handleButtonClick(event._id)}
-                            >
-                              <img
-                                src={chosen_fileIcon}
-                                alt="Choose file"
-                                style={{ width: '15px', height: '15px' }}
-                              />
-                            </CButton>
-                            {/* Hidden file input */}
-                            <input
-                              type="file"
-                              ref={(el) => (fileInputRefs.current[event._id] = el)}
-                              onChange={(e) => handleFileChange(e, event._id)}
-                              style={{ display: 'none' }}
-                            />
-                          </>
-                        )}
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))
-                ) : (
-                  // If no events on this day, show an empty row with the day name
-                  <CTableRow key={index}>
-                    <CTableDataCell>{day}</CTableDataCell>
-                    <CTableDataCell colSpan="7">No events scheduled.</CTableDataCell>
-                  </CTableRow>
-                )}
-              </React.Fragment>
-            ))}
+                          );
+                          setPopupVisible(true);
+                        }}
+                      >
+                        <img src={editIcon} style={{ width: '15px', height: '15px' }} alt="Edit" />
+                      </CButton>
+                    )}
+                  </CTableDataCell>
+                  {/* Event Image */}
+                  <CTableDataCell>
+                    {event.image ? (
+                      <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        <img
+                          src={event.image}
+                          alt="Event"
+                          style={{
+                            width: 'auto',
+                            height: '50px',
+                            objectFit: 'cover',
+                            border: '5px solid #EDEDEE',
+                            borderRadius: '10px',
+                          }}
+                        />
+                        <CButton
+                          size="l"
+                          style={{ backgroundColor: '#E31B54' }}
+                          onClick={() => handleDeleteImage(dayName)}
+                          disabled={isDisabled}
+                        >
+                          <img
+                            src={deleteIcon}
+                            alt="Delete file"
+                            style={{ width: '15px', height: '15px' }}
+                          />
+                        </CButton>
+                      </div>
+                    ) : (
+                      <>
+                        <CButton
+                          size="l"
+                          style={{ backgroundColor: '#EDEDEE' }}
+                          onClick={() => handleButtonClick(dayName)}
+                          disabled={isDisabled}
+                        >
+                          <img
+                            src={chosen_fileIcon}
+                            alt="Choose file"
+                            style={{ width: '15px', height: '15px' }}
+                          />
+                        </CButton>
+                        {/* Hidden file input */}
+                        <input
+                          type="file"
+                          ref={(el) => (fileInputRefs.current[dayName] = el)}
+                          onChange={(e) => handleFileChange(e, dayName)}
+                          style={{ display: 'none' }}
+                        />
+                      </>
+                    )}
+                  </CTableDataCell>
+                </CTableRow>
+              );
+            })}
           </CTableBody>
         </CTable>
       </div>
 
       {/* Add Single Event and Save Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: '25px', marginTop: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          gap: '25px',
+          marginTop: '20px',
+        }}
+      >
         <CButton
           color="success text-white"
           style={{
@@ -1121,7 +1270,15 @@ const AddSkipping = ({ siteId }) => {
                   setPopupVisible(false);
                   // Re-fetch events
                   const fetchEvents = async () => {
-                    // ... same as before ...
+                    try {
+                      const res = await new VenuApiController().getAllEvents({ siteId });
+                      // Update eventData accordingly (same as in useEffect)
+                      // ...
+                      setLoading(false);
+                    } catch (error) {
+                      console.error(error);
+                      setLoading(false);
+                    }
                   };
                   fetchEvents();
                 }}
@@ -1149,7 +1306,7 @@ const AddSkipping = ({ siteId }) => {
           }}
           onClick={handleSaveAll}
         >
-          Save
+          Save All
         </CButton>
       </div>
 
@@ -1168,37 +1325,30 @@ const AddSkipping = ({ siteId }) => {
   );
 };
 
-const EnterQuantity = () => {
-  const [quantity, setQuantity] = useState('')
+const EnterQuantity = ({ initialQuantity, onSave }) => {
+  const [quantity, setQuantity] = useState(initialQuantity);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!quantity) {
-      toast.warning('Please enter quantity limit')
-      return
+      toast.warning('Please enter quantity limit');
+      return;
     }
 
-    new AuthApiController().register({ quantity }).then((res) => {
-      if (res.message) {
-        toast.error(res.message)
-      } else {
-        toast.success('Quantity saved successfully.')
-        setQuantity('')
-      }
-    })
-  }
+    onSave(quantity);
+  };
 
   // Restrict non-numeric input
   const handleQuantityChange = (e) => {
-    const value = e.target.value
+    const value = e.target.value;
     if (!isNaN(value) && value >= 0) {
-      setQuantity(value)
+      setQuantity(value);
     }
-  }
+  };
 
   return (
-    <CForm className="w-100 px-4" style={{backgroundColor:'white'}}>
+    <CForm className="w-100 px-4" style={{ backgroundColor: 'white' }}>
       <div className="mb-3">
         <CFormInput
           type="number"
@@ -1211,14 +1361,18 @@ const EnterQuantity = () => {
         />
       </div>
 
-      <div style={{padding:'15px 0px'}}>
-        <CButton color="success text-white" className='model-save-btn' onClick={handleSubmit}>
+      <div style={{ padding: '15px 0px' }}>
+        <CButton color="success text-white" className="model-save-btn" onClick={handleSubmit}>
           Save
         </CButton>
       </div>
     </CForm>
-  )
-}
+  );
+};
+
+
+
+
 
 const AddSESkip = ({ siteId, onEventAdded }) => {
   const [name, setName] = useState('');
