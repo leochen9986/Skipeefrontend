@@ -247,11 +247,7 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
         <h2  style={{fontWeight:'bold'}}>Select a Ticket</h2>
         <div className="ticket-list" >
           {tickets
-            .filter(
-              (ticket) =>
-                new Date(ticket.saleStartTime) < new Date() &&
-                new Date(ticket.saleEndTime) > new Date(),
-            )
+
             .map((ticket) => (
               <div
                 key={ticket._id}
