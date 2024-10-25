@@ -26,37 +26,23 @@ const OrderConfirmation = () => {
   const [loading, setLoading] = useState(true)
   const [showQR, setShowQR] = useState(false)
   const location = useLocation()
-  // const isSuccess = new URLSearchParams(location.search).get('success') === 'true'
-  const isSuccess = 'true'
+  const isSuccess = new URLSearchParams(location.search).get('success') === 'true'
+
+
 
   useEffect(() => {
-
-    const fakeTicketData = {
-      noOfUser: 2,
-      eventTicket: {
-        name: 'VIP Ticket',
-        event: {
-          name: 'Concert of the Year',
-          image: {eventPNG},
-          date: '2024-12-25',
-          startTime: '19:00',
-          endTime: '23:00',
-          location: 'City Arena',
-        },
-      },
-    }
 
     const fetchTicket = async () => {
       try {
         const response = await new TicketApiController().getTicket(ticketId)
-        setTicket(fakeTicketData)
-        // setTicket(response)
+        setTicket(response)
         setLoading(false)
       } catch (error) {
         toast.error('Error fetching ticket:', error)
         setLoading(false)
       }
     }
+    
 
     const confirmTicketBooked = async () => {
       try {
@@ -97,7 +83,6 @@ const OrderConfirmation = () => {
     </>
     )
   }
-
   return (
     <>
       <div style={{ height: '65px', width: '100%', backgroundColor: 'white' ,border: '2px solid #E2E2E3'}}>
@@ -108,11 +93,11 @@ const OrderConfirmation = () => {
         <div>
           <div style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img 
-              src={eventPNG} 
-              //alt={event.name} 
+              src={ticket?.eventTicket?.event?.image}
+              alt={ticket?.eventTicket?.event?.name}
               style={{ height: '15%', width: '15%', margin: '5% 2% 1% 2%', position: 'relative', zIndex: 1 }} 
             />
-            <h1 style={{ zIndex: 1, position: 'relative' }}>t {/*{event.name}*/}</h1>
+            <h1 style={{ zIndex: 1, position: 'relative' }}>{ticket?.eventTicket?.event?.name}</h1>
           </div>
           <div className="order-confirmation">
           <br />
@@ -143,7 +128,7 @@ const OrderConfirmation = () => {
             >            
             <img src={select_ticketIcon} style={{paddingBottom: '2%',}}/>
             <h3>Ticket Details</h3>
-<div className="dashed-line" ></div>
+            <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
 <div style={{ width: '100%', margin: '10px', backgroundColor: 'white' }}> {/* Set background color to white */}
   <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
     <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
@@ -178,9 +163,11 @@ const OrderConfirmation = () => {
         </p>
       </div>
       <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-        {ticket?.eventTicket?.event?.endDate
+        {format(new Date(ticket?.createdAt), 'dd/MM/yyyy')}
+        {/* {ticket?.eventTicket?.event?.endDate
           ? 'Recurring Event'
-          : format(new Date(ticket?.eventTicket?.event?.date), 'dd/MM/yyyy')}
+          : format(new Date(ticket?.eventTicket?.event?.date), 'dd/MM/yyyy')} */}
+          
       </p>
     </CCol>
     <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
@@ -191,8 +178,9 @@ const OrderConfirmation = () => {
         </p>
       </div>
       <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-        {ticket?.eventTicket?.event?.startTime} -{' '}
-        {ticket?.eventTicket?.event?.endTime}
+      {format(new Date(ticket?.createdAt), 'HH:mm')}
+        {/* {ticket?.eventTicket?.event?.startTime} -{' '}
+        {ticket?.eventTicket?.event?.endTime} */}
       </p>
     </CCol>
   </CRow>
@@ -212,7 +200,7 @@ const OrderConfirmation = () => {
 </div>
 
 
-          <div  className="dashed-line" ></div>
+          <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
           <div id={ticketId} className="qr-code mb-3">
               <QRCode
                 value={ticketId}

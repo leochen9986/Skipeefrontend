@@ -26,6 +26,8 @@ import EIIcon from 'src/assets/icon_svg/EI.svg';
 import UFPIcon from 'src/assets/icon_svg/UFP.svg'; 
 import './Home.scss'
 import ContactUs,{ContactUsDiv} from 'src/views/pages/contact/ContactUs.js'; 
+import { Element } from 'react-scroll';
+
 
 const benefits = [
   {
@@ -49,35 +51,74 @@ const benefits = [
 ]
 
 const Home = () => {
+  const [isHomeInView, setIsHomeInView] = useState(false);
+  const [isAboutInView, setIsAboutInView] = useState(false);
+  const [isContactInView, setIsContactInView] = useState(false);
+
+  const handleScroll = () => {
+    const homeSection = document.getElementById('home-section');
+    const aboutSection = document.getElementById('about-section');
+    const contactSection = document.getElementById('contact-section');
+
+    if (homeSection) {
+      const rect = homeSection.getBoundingClientRect();
+      setIsHomeInView(rect.top <= window.innerHeight && rect.bottom >= 0);
+    }
+    
+    if (aboutSection) {
+      const rect = aboutSection.getBoundingClientRect();
+      setIsAboutInView(rect.top <= window.innerHeight && rect.bottom >= 0);
+    }
+    
+    if (contactSection) {
+      const rect = contactSection.getBoundingClientRect();
+      setIsContactInView(rect.top <= window.innerHeight && rect.bottom >= 0);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   return (
     <div style={{ position: 'relative' }}>
-      <UserHeader />
-
-      {/* <CarouselPrimary items={carouselItems} /> */}
-      <HeroSection />
-
-      <BenefitsSection />
-
-      {/* About Us */}
-      <AboutUsDiv/>
-      <CCol className="text-center" style={{marginTop:'3%', marginBottom:'3%'}}>
-      <>
-      <h2 className="fw-bold display-4" >
-        Feel Free to <span className="highlight">Contact Us</span>
-      </h2>
-        <p className="text-center">
-          We look forward to discussing the possibilities together. Send us a <br /> message, and we will get back to you soon.
-        </p>
-       </>
-      </CCol>
-      <CContainer className="bg-light p-5 contact-div" style={{marginBottom:'5%',borderRadius:'10px'}}>
-      <ContactUsDiv/>
-      </CContainer>
-
+      <UserHeader 
+        isHomeInView={isHomeInView}
+        isAboutInView={isAboutInView}
+        isContactInView={isContactInView}
+        setIsAboutInView={setIsAboutInView} // Pass the setter as a prop
+        setIsContactInView={setIsContactInView} // Pass the setter as a prop
+      />
+      <div id="home-section">
+        <HeroSection />
+      </div>
+        <BenefitsSection />
+      
+      <div id="about-section">
+        <AboutUsDiv />
+      </div>
+      
+        <CCol className="text-center" style={{ marginTop: '3%', marginBottom: '3%' }}>
+        <div id="contact-section">
+          <h2 className="fw-bold display-4">
+            Feel Free to <span className="highlight">Contact Us</span>
+          </h2>
+          <p className="text-center">
+            We look forward to discussing the possibilities together. Send us a <br /> message, and we will get back to you soon.
+          </p>
+          </div>
+        </CCol>
+        <CContainer className="bg-light p-5 contact-div" style={{ marginBottom: '5%', borderRadius: '10px' }}>
+          <ContactUsDiv />
+        </CContainer>
+      
       <AppFooter />
     </div>
-  )
-}
+  );
+};
 
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value)

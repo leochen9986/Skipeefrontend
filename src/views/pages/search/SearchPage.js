@@ -40,6 +40,9 @@ const Search = () => {
     const searchTerm = new URLSearchParams(location.search).get('search')
     const siteId = new URLSearchParams(location.search).get('siteId')
 
+    
+
+
     if (searchTerm || siteId) {
       fetchResults(searchTerm, siteId)
     }
@@ -82,12 +85,13 @@ const Search = () => {
           ) : (
 
             <ul className="results-list" >
-              {results.map((result, index) => (
+
                 <div  style={{width:'100%', height:'100%'}}>
-                  <SingleEventItem key={index} event={result}  />
+                  <SingleEventItem event={results}  />
+                  
                 {/* <EventCard key={index} event={result} /> */}
                 </div>
-              ))}
+              
               {results.length === 0 && (
                 <div className="loader-container" style={{ height: '100%', padding: '10%' }}>
                 <img src={noresultfoundIcon} style={{ width: '25%', height: 'auto' }} alt="No Results Found" />
@@ -152,6 +156,7 @@ const EventCard = ({ event }) => {
                   onClick={() => {
                     setPopupChildren(<EventDetailView event={event} onProceed={handleProceed} />)
                     setPopupVisible(true)
+                    
                   }}
                 >
                   View Details
@@ -260,7 +265,8 @@ const SearchSection = () => {
   const debouncedSearch = useDebounce(search, 300)
 
   const handleSearch = () => {
-    nav(`/search?search=${search}`)
+    nav(`/search?search=${search}`);
+    window.location.reload();
   }
 
   const getAllEvents = () => {
@@ -302,8 +308,10 @@ const SearchSection = () => {
 
     if (suggestion.type === 'event') {
       nav(`/search?search=${suggestion.name}`)
+      window.location.reload();
     } else {
       nav(`/search?siteId=${suggestion._id}`)
+      window.location.reload();
     }
   }
 

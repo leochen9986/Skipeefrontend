@@ -32,6 +32,9 @@ const EventBooking = () => {
   })
   const nav = useNavigate()
 
+
+
+
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -49,6 +52,10 @@ const EventBooking = () => {
 
     fetchEvent()
   }, [eventId])
+
+  const handleGoBack = () => {
+    nav(-1); // This navigates back to the previous page
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -93,14 +100,17 @@ const EventBooking = () => {
       eventTicket: ticketId,
     }
     setLoading(true)
-    nav(`/book/${ticketId}`)
+    
 
     new TicketApiController().initiateTicketBooking(data).then((res) => {
       if (res.message) {
         toast.error(res.message)
+        //nav(`/book/${ticketId}`);
+        
       } else {
         toast.success('Complete the payment to book ticket')
         window.location.href = res.url
+        
       }
       setLoading(false)
     })
@@ -117,8 +127,8 @@ const EventBooking = () => {
   if (showSplash) {
     return (
       <div className="splash-screen">
-        <img src={event.site.logo} alt={event.site.name} className="site-logo" />
-        <h1>{event.site.name}</h1>
+        <img src={event.site?.logo} alt={event.site?.name} className="site-logo" />
+        <h1>{event.site?.name}</h1>
         <p>Powered by Skipee</p>
       </div>
     )
@@ -242,8 +252,9 @@ const EventBooking = () => {
                 style={{
                   backgroundColor: 'black',
                   borderRadius: '30px',
-                  // Removed width since it's managed in CSS now
+                  
                 }}
+                onClick={handleGoBack} 
               >
                 Go Back
               </CButton>
@@ -276,7 +287,7 @@ const EventBooking = () => {
           </form>
         ) : (
           <form style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }} onSubmit={handleSubmit}>            
-          <h2 style={{ fontWeight:'bold'}}>Queue Skip at Venue</h2>
+          <h2 style={{ fontWeight:'bold'}}>{selectedTicket.name} at Venue</h2>
             <div
               style={{
                 width: '95%',
@@ -292,11 +303,12 @@ const EventBooking = () => {
             >            
             <img src={select_queueIcon} style={{paddingBottom: '2%',}}/>
             <p style={{color:'black'}}>This is not an entry ticket, please check entry requirements</p>
-            <div  className="dashed-line" ></div>
-            <p style={{color:'black',paddingTop: '2%', }}>Current Queue Skip</p>
-            <div className="price"> £ 30.00{selectedTicket && <ViewTicketPrice amount={selectedTicket.price} site={event.site} />}</div>
-            <div className="price-small"> + £ 0.0 fees{selectedTicket && <ViewTicketPrice amount={selectedTicket.price} site={event.site} />}</div>
-            <p>How many Queue Skips would you like?</p>
+            <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
+            <p style={{color:'black',paddingTop: '2%', }}>Current {selectedTicket.name}</p>
+            <div className="price" style={{ margin: 0, padding: 0, lineHeight: '0.7',marginBottom:'25px' }}>
+              {selectedTicket && <ViewTicketPrice amount={selectedTicket.price} site={event.site} />}
+            </div>
+            <p>How many {selectedTicket.name} would you like?</p>
             <div className="quantity-selector">
               <button type="button" onClick={() => handleQuantityChange(-1)}>
                 -
@@ -317,6 +329,7 @@ const EventBooking = () => {
             width: '49%', // Adjust width to fit in the row
             }}
             // onClick={onClose}
+            onClick={handleGoBack} 
             >
             Go Back
             </CButton>
