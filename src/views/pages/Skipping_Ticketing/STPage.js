@@ -773,6 +773,7 @@ const AddSkipping = ({ siteId }) => {
 
         if (res && !res.message) {
           // Group events by day of the week and initialize eventData
+          console.log(res);
           res.forEach((event) => {
             const eventDate = new Date(event.date);
             const dayIndex = eventDate.getDay();
@@ -902,7 +903,7 @@ const AddSkipping = ({ siteId }) => {
               ? parseInt(updatedEvent.quantity) || 300
               : 999999,
             saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-            saleEndTime: getSaleEndTime(dayName, updatedEvent.endTime).toISOString(),
+            saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime,updatedEvent.endTime).toISOString(),
           };
           await new VenuApiController().updateTicket(ticketId, ticketUpdateData);
         }
@@ -968,25 +969,46 @@ const AddSkipping = ({ siteId }) => {
     const dayIndex = daysOfWeek.find((day) => day.name === dayName).index;
     const today = new Date();
     const todayIndex = today.getDay();
+  
+    let nextDate = new Date(today);
+  
+    // Check if the selected day is today
+    if (dayIndex === todayIndex) {
+      // Set nextDate to today if it's the same day
+      return nextDate;
+    }
+  
+    // Otherwise, calculate the next occurrence of the day
     let daysAhead = (dayIndex - todayIndex + 7) % 7;
-    if (daysAhead === 0) daysAhead = 7; // Always get the next week
-    const nextDate = new Date(today);
+    if (daysAhead === 0) daysAhead = 7; // Ensure it goes to the next week if today is the same day but we didn't set it to today above
+  
     nextDate.setDate(today.getDate() + daysAhead);
     return nextDate;
   };
 
   const getSaleStartTime = (dayName, startTime) => {
     const nextDate = getNextDateOfDay(dayName);
-    const [hours, minutes] = startTime.split(':');
-    nextDate.setHours(hours, minutes, 0, 0);
+    const [startHours, startMinutes] = startTime.split(':');
+    nextDate.setHours(startHours, startMinutes, 0, 0);
     return nextDate;
   };
-
-  const getSaleEndTime = (dayName, endTime) => {
+  
+  const getSaleEndTime = (dayName, startTime, endTime) => {
     const nextDate = getNextDateOfDay(dayName);
-    const [hours, minutes] = endTime.split(':');
-    nextDate.setHours(hours, minutes, 0, 0);
-    return nextDate;
+    const [startHours, startMinutes] = startTime.split(':');
+    const [endHours, endMinutes] = endTime.split(':');
+  
+    // Set the end time
+    const endDate = new Date(nextDate);
+    endDate.setHours(endHours, endMinutes, 0, 0);
+  
+    // Check if end time is earlier than start time (indicating it falls on the next day)
+    if (parseInt(endHours) < parseInt(startHours) || 
+       (parseInt(endHours) === parseInt(startHours) && parseInt(endMinutes) < parseInt(startMinutes))) {
+      endDate.setDate(endDate.getDate() + 1); // Move end time to the next day
+    }
+  
+    return endDate;
   };
 
   const createTicketForEvent = async (eventId, updatedEvent, dayName) => {
@@ -1002,7 +1024,7 @@ const AddSkipping = ({ siteId }) => {
           ? parseInt(updatedEvent.quantity) || 300
           : 999999,
         saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-        saleEndTime: getSaleEndTime(dayName, updatedEvent.endTime).toISOString(),
+        saleEndTime: getSaleEndTime(dayName,updatedEvent.startTime, updatedEvent.endTime).toISOString(),
       };
   
       const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
