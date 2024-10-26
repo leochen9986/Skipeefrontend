@@ -733,6 +733,7 @@ const AddSkipping = ({ siteId }) => {
   const [popupChildren, setPopupChildren] = useState(null);
   const [popupTitle, setPopupTitle] = useState('');
   const fileInputRefs = useRef({});
+  const [singleEvents, setSingleEvents] = useState([]);
 
   // Adjusted daysOfWeek array
   const daysOfWeek = [
@@ -762,25 +763,51 @@ const AddSkipping = ({ siteId }) => {
             price: '',
             lastEntryTime: '',
             limitQuantity: false,
-            status: false, // Toggle off by default
+            status: false,
             image: null,
-            quantity: 300, // Default quantity
+            quantity: 300,
             tickets: [],
             eventId: null,
             isExistingEvent: false,
+            isSingleEvent: false,
           };
         });
 
+        const fetchedSingleEvents = [];
+        
+
         if (res && !res.message) {
-          // Group events by day of the week and initialize eventData
-          console.log(res);
+          // Process the fetched events
           res.forEach((event) => {
-            const eventDate = new Date(event.date);
-            const dayIndex = eventDate.getDay();
-            const dayName = daysOfWeek.find((day) => day.index === dayIndex)?.name;
-            if (dayName) {
-              initialEventData[dayName] = {
+
+            if (!event.singleEvent) {
+              // Group recurring events by day of the week
+              const eventDate = new Date(event.date);
+              const dayIndex = eventDate.getDay();
+              const dayName = daysOfWeek.find((day) => day.index === dayIndex)?.name;
+              
+              if (dayName) {
+                initialEventData[dayName] = {
+                  name: event.name,
+                  startTime: event.startTime,
+                  endTime: event.endTime,
+                  price: event.tickets?.[0]?.price || '',
+                  lastEntryTime: event.lastEntryTime || '',
+                  limitQuantity: event.limitQuantity || false,
+                  status: event.status === 'upcoming',
+                  image: event.image || null,
+                  quantity: event.tickets?.[0]?.totalQuantity || 300, // Use existing quantity or default
+                  tickets: event.tickets,
+                  eventId: event._id,
+                  isExistingEvent: false,
+                };
+              }
+            } else {
+
+              // Single event handling
+              fetchedSingleEvents.push({
                 name: event.name,
+                date: new Date(event.date).toISOString(),
                 startTime: event.startTime,
                 endTime: event.endTime,
                 price: event.tickets?.[0]?.price || '',
@@ -788,16 +815,21 @@ const AddSkipping = ({ siteId }) => {
                 limitQuantity: event.limitQuantity || false,
                 status: event.status === 'upcoming',
                 image: event.image || null,
-                quantity: event.tickets?.[0]?.totalQuantity || 300, // Use existing quantity or default
+                quantity: event.tickets?.[0]?.totalQuantity || 300,
                 tickets: event.tickets,
                 eventId: event._id,
                 isExistingEvent: true,
-              };
+              });
+
+              console.log(fetchedSingleEvents);
             }
           });
         }
-
+  
+        // Update the state with the processed data
         setEventData(initialEventData);
+        setSingleEvents(fetchedSingleEvents);
+        console.log(eventData);
       } catch (error) {
         toast.error('Failed to load events');
         console.error('Error fetching events:', error);
@@ -923,6 +955,7 @@ const AddSkipping = ({ siteId }) => {
           status: 'upcoming',
           siteId: siteId,
           date: getNextDateOfDay(dayName).toISOString(),
+          isSingleEvent : false,
         };
 
         const eventResponse = await new VenuApiController().createEvent(eventDataToCreate);
@@ -1034,6 +1067,235 @@ const AddSkipping = ({ siteId }) => {
       return null;
     }
   };
+
+  const handleSingleEventInputChange = (index, field, value) => {
+    setSingleEvents((prevEvents) => {
+      const updatedEvents = [...prevEvents];
+      updatedEvents[index] = {
+        ...updatedEvents[index],
+        [field]: value,
+      };
+      return updatedEvents;
+    });
+  };
+
+  const handleSingleEventToggleChange = (index, field, value) => {
+    handleSingleEventInputChange(index, field, value);
+  
+    if (field === 'limitQuantity' && !value) {
+      // When limitQuantity is toggled off, clear the quantity
+      handleSingleEventInputChange(index, 'quantity', '');
+    }
+  };
+
+  const singleFileInputRefs = useRef({});
+
+const handleSingleEventButtonClick = (index) => {
+  if (singleFileInputRefs.current[index]) {
+    singleFileInputRefs.current[index].click();
+  }
+};
+
+const handleSingleEventFileChange = async (e, index) => {
+  const file = e.target.files[0];
+  if (file) {
+    try {
+      // Upload to Firebase and get download URL
+      const downloadURL = await uploadImageToFirebase(file);
+
+      // Update the local state
+      handleSingleEventInputChange(index, 'image', downloadURL);
+    } catch (error) {
+      toast.error('Failed to upload image');
+      console.error(error);
+    }
+  }
+};
+
+const handleDeleteSingleEventImage = (index) => {
+  // Remove image from state
+  handleSingleEventInputChange(index, 'image', null);
+};
+
+const handleSingleEventSave = async (index, showToast = true) => {
+  const updatedEvent = singleEvents[index];
+  try {
+    if (updatedEvent.status) {
+      // Validate required fields
+      const requiredFields = ['name', 'startTime', 'endTime', 'price', 'date'];
+      const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
+
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+    }
+
+    if (updatedEvent.eventId) {
+      // Update existing event
+      const eventUpdateData = {
+        name: updatedEvent.name,
+        date: updatedEvent.date,
+        startTime: updatedEvent.startTime,
+        endTime: updatedEvent.endTime,
+        lastEntryTime: updatedEvent.lastEntryTime,
+        status: updatedEvent.status ? 'upcoming' : 'on hold',
+        image: updatedEvent.image,
+        limitQuantity: updatedEvent.limitQuantity,
+        isSingleEvent: true,
+      };
+
+      await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
+
+      // Update ticket if necessary
+      if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
+        const ticketId = updatedEvent.tickets[0]._id;
+        const saleStartTime = getSaleStartTimeForSingleEvent(
+          updatedEvent.date,
+          updatedEvent.startTime
+        );
+        const saleEndTime = getSaleEndTimeForSingleEvent(
+          updatedEvent.date,
+          updatedEvent.startTime,
+          updatedEvent.endTime
+        );
+
+        const ticketUpdateData = {
+          name: 'Skip Ticket',
+          type: 'skip',
+          price: parseFloat(updatedEvent.price),
+          totalQuantity: updatedEvent.limitQuantity
+            ? parseInt(updatedEvent.quantity) || 300
+            : 999999,
+          availableQuantity: updatedEvent.limitQuantity
+            ? parseInt(updatedEvent.quantity) || 300
+            : 999999,
+          saleStartTime: saleStartTime.toISOString(),
+          saleEndTime: saleEndTime.toISOString(),
+        };
+        await new VenuApiController().updateTicket(ticketId, ticketUpdateData);
+      }
+
+      if (showToast) {
+        toast.success('Single event updated successfully.');
+      }
+    } else if (updatedEvent.status) {
+      // Create new event
+      const eventDataToCreate = {
+        name: updatedEvent.name,
+        date: updatedEvent.date,
+        startTime: updatedEvent.startTime,
+        endTime: updatedEvent.endTime,
+        lastEntryTime: updatedEvent.lastEntryTime,
+        image: updatedEvent.image,
+        limitQuantity: updatedEvent.limitQuantity,
+        status: 'upcoming',
+        siteId: siteId,
+        isSingleEvent: true,
+      };
+
+      const eventResponse = await new VenuApiController().createEvent(eventDataToCreate);
+      if (eventResponse && !eventResponse.message) {
+        const eventId = eventResponse._id;
+        // Create ticket for the new event
+        const ticketResponse = await createTicketForSingleEvent(eventId, updatedEvent);
+
+        if (ticketResponse) {
+          if (showToast) {
+            toast.success('Single event and ticket created successfully.');
+          }
+          // Update singleEvents with new eventId and ticket
+          setSingleEvents((prevEvents) => {
+            const updatedEvents = [...prevEvents];
+            updatedEvents[index] = {
+              ...updatedEvents[index],
+              eventId: eventId,
+              isExistingEvent: true,
+              tickets: [ticketResponse],
+            };
+            return updatedEvents;
+          });
+        } else {
+          toast.error('Failed to create event ticket.');
+        }
+      } else {
+        toast.error('Failed to create event.');
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    toast.error('Failed to save single event.');
+  }
+};
+
+
+const createTicketForSingleEvent = async (eventId, updatedEvent) => {
+  try {
+    const saleStartTime = getSaleStartTimeForSingleEvent(updatedEvent.date, updatedEvent.startTime);
+    const saleEndTime = getSaleEndTimeForSingleEvent(
+      updatedEvent.date,
+      updatedEvent.startTime,
+      updatedEvent.endTime
+    );
+
+    const ticketData = {
+      name: 'Skip Ticket',
+      type: 'skip',
+      price: parseFloat(updatedEvent.price),
+      totalQuantity: updatedEvent.limitQuantity
+        ? parseInt(updatedEvent.quantity) || 300
+        : 999999,
+      availableQuantity: updatedEvent.limitQuantity
+        ? parseInt(updatedEvent.quantity) || 300
+        : 999999,
+      saleStartTime: saleStartTime.toISOString(),
+      saleEndTime: saleEndTime.toISOString(),
+    };
+
+    const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
+    return ticketResponse;
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    return null;
+  }
+};
+
+const getSaleStartTimeForSingleEvent = (date, startTime) => {
+  const [startHours, startMinutes] = startTime.split(':');
+  const saleStartTime = new Date(date);
+  saleStartTime.setHours(startHours, startMinutes, 0, 0);
+  return saleStartTime;
+};
+
+const getSaleEndTimeForSingleEvent = (date, startTime, endTime) => {
+  const [startHours, startMinutes] = startTime.split(':');
+  const [endHours, endMinutes] = endTime.split(':');
+
+  const saleStartTime = new Date(date);
+  saleStartTime.setHours(startHours, startMinutes, 0, 0);
+
+  const saleEndTime = new Date(date);
+  saleEndTime.setHours(endHours, endMinutes, 0, 0);
+
+  // Check if end time is earlier than start time (crosses midnight)
+  if (
+    parseInt(endHours) < parseInt(startHours) ||
+    (parseInt(endHours) === parseInt(startHours) &&
+      parseInt(endMinutes) < parseInt(startMinutes))
+  ) {
+    saleEndTime.setDate(saleEndTime.getDate() + 1);
+  }
+
+  return saleEndTime;
+};
+
+const handleSaveAllSingleEvents = async () => {
+  for (let index = 0; index < singleEvents.length; index++) {
+    await handleSingleEventSave(index, false);
+  }
+  toast.success('All single events saved successfully.');
+};
+
 
   if (loading) {
     return <CSpinner />;
@@ -1252,6 +1514,217 @@ const AddSkipping = ({ siteId }) => {
                 </CTableRow>
               );
             })}
+{singleEvents.length > 0 && (
+  <CTableRow>
+    <CTableDataCell colSpan="8" style={{ textAlign: 'center', fontWeight: 'bold' }}>
+      Single Events
+    </CTableDataCell>
+  </CTableRow>
+)}
+
+{singleEvents.map((event, index) => {
+  const isDisabled = !event.status;
+
+  return (
+    <CTableRow key={`single-event-${index}`}>
+      {/* Event Date */}
+      <CTableDataCell>
+        {new Date(event.date).toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })}
+      </CTableDataCell>
+      {/* Event Name */}
+      <CTableDataCell>
+        <CFormInput
+          value={event.name}
+          onChange={(e) => handleSingleEventInputChange(index, 'name', e.target.value)}
+          placeholder="Event Name"
+          disabled={isDisabled}
+          style={{ backgroundColor: isDisabled ? '#f0f0f0' : 'white' }}
+        />
+      </CTableDataCell>
+      {/* Status Toggle */}
+      <CTableDataCell>
+        <label className="toggle-container">
+          <input
+            type="checkbox"
+            checked={event.status}
+            onChange={(e) => handleSingleEventToggleChange(index, 'status', e.target.checked)}
+            className="toggle-input"
+          />
+          <span className="toggle-slider"></span>
+        </label>
+      </CTableDataCell>
+      {/* Opening Times */}
+      <CTableDataCell>
+        <div style={{ display: 'flex', gap: '5px' }}>
+          {/* Start Time Picker */}
+          <DatePicker
+            selected={
+              event.startTime
+                ? new Date(`1970-01-01T${event.startTime}:00`)
+                : null
+            }
+            onChange={(date) => {
+              const timeString = date.toTimeString().slice(0, 5);
+              handleSingleEventInputChange(index, 'startTime', timeString);
+            }}
+            showTimeSelect
+            showTimeSelectOnly
+            timeIntervals={15}
+            timeCaption="Start Time"
+            dateFormat="HH:mm"
+            disabled={isDisabled}
+            placeholderText="Start Time"
+          />
+          {/* End Time Picker */}
+          <DatePicker
+            selected={
+              event.endTime
+                ? new Date(`1970-01-01T${event.endTime}:00`)
+                : null
+            }
+            onChange={(date) => {
+              const timeString = date.toTimeString().slice(0, 5);
+              handleSingleEventInputChange(index, 'endTime', timeString);
+            }}
+            showTimeSelect
+            showTimeSelectOnly
+            timeIntervals={15}
+            timeCaption="End Time"
+            dateFormat="HH:mm"
+            disabled={isDisabled}
+            placeholderText="End Time"
+          />
+        </div>
+      </CTableDataCell>
+      {/* Price */}
+      <CTableDataCell>
+        <CFormInput
+          type="number"
+          value={event.price}
+          onChange={(e) => handleSingleEventInputChange(index, 'price', e.target.value)}
+          disabled={isDisabled}
+          placeholder="Price"
+          style={{ backgroundColor: isDisabled ? '#f0f0f0' : 'white' }}
+        />
+      </CTableDataCell>
+      {/* Last Entry Time */}
+      <CTableDataCell>
+        <DatePicker
+          selected={
+            event.lastEntryTime
+              ? new Date(`1970-01-01T${event.lastEntryTime}:00`)
+              : null
+          }
+          onChange={(date) => {
+            const timeString = date.toTimeString().slice(0, 5);
+            handleSingleEventInputChange(index, 'lastEntryTime', timeString);
+          }}
+          showTimeSelect
+          showTimeSelectOnly
+          timeIntervals={15}
+          timeCaption="Last Entry Time"
+          dateFormat="HH:mm"
+          disabled={isDisabled}
+          placeholderText="Last Entry Time"
+        />
+      </CTableDataCell>
+      {/* Limit Quantity */}
+      <CTableDataCell>
+        <label className="toggle-container">
+          <input
+            type="checkbox"
+            checked={event.limitQuantity}
+            onChange={(e) =>
+              handleSingleEventToggleChange(index, 'limitQuantity', e.target.checked)
+            }
+            className="toggle-input"
+            disabled={isDisabled}
+          />
+          <span className="toggle-slider"></span>
+        </label>
+        {event.limitQuantity && !isDisabled && (
+          <CButton
+            size="sm"
+            style={{ marginLeft: '5px', backgroundColor: 'transparent' }}
+            onClick={() => {
+              setPopupTitle('Enter Quantity');
+              setPopupChildren(
+                <EnterQuantity
+                  initialQuantity={event.quantity || 300}
+                  onSave={(quantity) => {
+                    handleSingleEventInputChange(index, 'quantity', quantity);
+                    setPopupVisible(false);
+                  }}
+                />
+              );
+              setPopupVisible(true);
+            }}
+          >
+            <img src={editIcon} style={{ width: '15px', height: '15px' }} alt="Edit" />
+          </CButton>
+        )}
+      </CTableDataCell>
+      {/* Event Image */}
+      <CTableDataCell>
+        {event.image ? (
+          <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+            <img
+              src={event.image}
+              alt="Event"
+              style={{
+                width: 'auto',
+                height: '50px',
+                objectFit: 'cover',
+                border: '5px solid #EDEDEE',
+                borderRadius: '10px',
+              }}
+            />
+            <CButton
+              size="l"
+              style={{ backgroundColor: '#E31B54' }}
+              onClick={() => handleDeleteSingleEventImage(index)}
+              disabled={isDisabled}
+            >
+              <img
+                src={deleteIcon}
+                alt="Delete file"
+                style={{ width: '15px', height: '15px' }}
+              />
+            </CButton>
+          </div>
+        ) : (
+          <>
+            <CButton
+              size="l"
+              style={{ backgroundColor: '#EDEDEE' }}
+              onClick={() => handleSingleEventButtonClick(index)}
+              disabled={isDisabled}
+            >
+              <img
+                src={chosen_fileIcon}
+                alt="Choose file"
+                style={{ width: '15px', height: '15px' }}
+              />
+            </CButton>
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={(el) => (singleFileInputRefs.current[index] = el)}
+              onChange={(e) => handleSingleEventFileChange(e, index)}
+              style={{ display: 'none' }}
+            />
+          </>
+        )}
+      </CTableDataCell>
+    </CTableRow>
+          );
+        })}
+
           </CTableBody>
         </CTable>
       </div>
@@ -1326,7 +1799,10 @@ const AddSkipping = ({ siteId }) => {
             border: 'none',
             height: '43px',
           }}
-          onClick={handleSaveAll}
+          onClick={async () => {
+            await handleSaveAll();
+            await handleSaveAllSingleEvents();
+          }}
         >
           Save All
         </CButton>
@@ -1425,6 +1901,36 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
     fileInputRef.current.click();
   };
 
+    // New functions for calculating sale times
+    const getSaleStartTimeForSingleEvent = (date, startTime) => {
+      const [startHours, startMinutes] = startTime.split(':');
+      const saleStartTime = new Date(date);
+      saleStartTime.setHours(startHours, startMinutes, 0, 0);
+      return saleStartTime;
+    };
+  
+    const getSaleEndTimeForSingleEvent = (date, startTime, endTime) => {
+      const [startHours, startMinutes] = startTime.split(':');
+      const [endHours, endMinutes] = endTime.split(':');
+  
+      const saleStartTime = new Date(date);
+      saleStartTime.setHours(startHours, startMinutes, 0, 0);
+  
+      const saleEndTime = new Date(date);
+      saleEndTime.setHours(endHours, endMinutes, 0, 0);
+  
+      // Check if end time is earlier than start time (crosses midnight)
+      if (
+        parseInt(endHours) < parseInt(startHours) ||
+        (parseInt(endHours) === parseInt(startHours) &&
+          parseInt(endMinutes) < parseInt(startMinutes))
+      ) {
+        saleEndTime.setDate(saleEndTime.getDate() + 1);
+      }
+  
+      return saleEndTime;
+    };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -1467,6 +1973,7 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
         image: imageUrl,
         siteId: siteId,
         status: 'upcoming',
+        singleEvent: true,
       };
 
       // Create the Event
@@ -1474,9 +1981,14 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
       if (eventResponse && !eventResponse.message) {
         const eventId = eventResponse._id;
 
-        // Calculate saleStartTime and saleEndTime
-        const saleStartTime = new Date(`${date.toDateString()} ${openingTime}`);
-        const saleEndTime = new Date(`${date.toDateString()} ${openingEndTime}`);
+        // Calculate saleStartTime and saleEndTime using new functions
+        const saleStartTime = getSaleStartTimeForSingleEvent(date, openingTime);
+        const saleEndTime = getSaleEndTimeForSingleEvent(
+          date,
+          openingTime,
+          openingEndTime
+        );
+
 
         // Prepare ticket data
         const ticketData = {
@@ -1490,7 +2002,7 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
         };
 
         // Add the ticket to the event
-        const ticketResponse = await new VenuApiController().addTickets(eventId, ticketData);
+        const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
         if (ticketResponse && !ticketResponse.message) {
           toast.success('Event and ticket created successfully.');
 
@@ -1539,27 +2051,43 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
       {/* Opening Times */}
       <div className="mb-3">
         <h3 className="setting-label">Opening Start Time</h3>
-        <CFormInput
-          onChange={(e) => setOpeningTime(e.target.value)}
-          value={openingTime}
-          placeholder="Enter start time (e.g., 18:00)"
-          autoComplete="off"
-          size="lg"
+        <DatePicker
+          selected={
+            openingTime ? new Date(`1970-01-01T${openingTime}:00`) : null
+          }
+          onChange={(date) => {
+            const timeString = date.toTimeString().slice(0, 5);
+            setOpeningTime(timeString);
+          }}
+          showTimeSelect
+          showTimeSelectOnly
+          timeIntervals={15}
+          timeCaption="Start Time"
+          dateFormat="HH:mm"
+          placeholderText="Select start time"
           className="setting-input"
         />
       </div>
 
       <div className="mb-3">
-        <h3 className="setting-label">Opening End Time</h3>
-        <CFormInput
-          onChange={(e) => setOpeningEndTime(e.target.value)}
-          value={openingEndTime}
-          placeholder="Enter end time (e.g., 23:00)"
-          autoComplete="off"
-          size="lg"
-          className="setting-input"
-        />
-      </div>
+          <h3 className="setting-label">Opening End Time</h3>
+          <DatePicker
+            selected={
+              openingEndTime ? new Date(`1970-01-01T${openingEndTime}:00`) : null
+            }
+            onChange={(date) => {
+              const timeString = date.toTimeString().slice(0, 5);
+              setOpeningEndTime(timeString);
+            }}
+            showTimeSelect
+            showTimeSelectOnly
+            timeIntervals={15}
+            timeCaption="End Time"
+            dateFormat="HH:mm"
+            placeholderText="Select end time"
+            className="setting-input"
+          />
+        </div>
 
       {/* Event Price */}
       <div className="mb-3">
@@ -1596,11 +2124,20 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
       {/* Last Entry Time */}
       <div className="mb-3">
         <h3 className="setting-label">Last Entry Time</h3>
-        <CFormInput
-          onChange={(e) => setLastEntryTime(e.target.value)}
-          value={lastEntryTime}
-          placeholder="Enter last entry time (e.g., 22:00)"
-          size="lg"
+        <DatePicker
+          selected={
+            lastEntryTime ? new Date(`1970-01-01T${lastEntryTime}:00`) : null
+          }
+          onChange={(date) => {
+            const timeString = date.toTimeString().slice(0, 5);
+            setLastEntryTime(timeString);
+          }}
+          showTimeSelect
+          showTimeSelectOnly
+          timeIntervals={15}
+          timeCaption="Last Entry Time"
+          dateFormat="HH:mm"
+          placeholderText="Select last entry time"
           className="setting-input"
         />
       </div>
