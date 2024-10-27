@@ -244,13 +244,8 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
   return (
     <div className="ticket-popup-overlay">
       <div className="ticket-popup">
-<<<<<<< Updated upstream
-        <h2  style={{fontWeight:'bold'}}>Select a Ticket</h2>
-        <div className="ticket-list" >
-=======
-        <h2 style={{ fontWeight: 'bold' }}>Select a Ticket</h2>
+        <h2 className="ticket-header" style={{ fontWeight: 'bold' }}>Select a Ticket</h2>
         <div className="ticket-list">
->>>>>>> Stashed changes
           {tickets
             .filter(
               (ticket) =>
@@ -268,7 +263,6 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
                 }}
                 style={{
                   textAlign: 'center',
-                  paddingBottom: '5px', // Reduced padding for mobile
                   borderRadius: '15px',
                   width: '45%',
                   height: 'auto',
@@ -322,14 +316,15 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
             Proceed
           </button>
         </div>
-        <img src={processIcon} style={{ padding: '10px', maxWidth: '100%', height: 'auto' }} />
+        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <img src={processIcon} style={{ padding: '10px', maxWidth: '100%', height: 'auto' }} />
+    </div>
       </div>
     </div>
   );
   
-
+  
 }
-
 
 export default SearchCard
 

@@ -1,5 +1,23 @@
-.ticket-popup {
+.ticket-popup-overlay {
+  width: 100%; /* Set width to full screen */
+  height: 100vh; /* Optional: Set height to full viewport height */
+  position: fixed; /* Optional: Make it fixed to the viewport */
+  top: 0; /* Position at the top */
+  left: 0; /* Position at the left */
+  background: rgba(0, 0, 0, 0.5); /* Optional: Add a background overlay */
+}
+.ticket-list {
   display: flex;
+  overflow: hidden; 
+  padding: 10px; // Existing padding for ticket-list
+  width: 100%;
+  height: 100%; 
+  align-items: center;
+  justify-content: center;
+}
+
+.ticket-popup {
+
   flex-direction: column; 
   align-items: center; 
   background: white; 
@@ -8,16 +26,6 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
   max-width: 60%; /* Adjusted max-width for better mobile compatibility */
   width: 100%; 
-}
-
-.ticket-list {
-  display: flex;
-  overflow: hidden; 
-  padding: 10px; 
-  width: 100%;
-  height: 100%; 
-  align-items: center;
-  justify-content: center;
 }
 
 .ticket-item {
@@ -31,15 +39,22 @@
   display: flex; 
   flex-direction: column; 
   justify-content: center; 
-  padding: 10px; 
+  padding: 10px; // Existing padding for ticket-item
   height: auto; 
+
+  // Adjust padding for mobile
+  @media (max-width: 768px) {
+    padding: 5px; // Reduced padding for mobile
+  }
 }
 
-/* Media Queries for Mobile Responsiveness */
+// Existing media query styles
 @media (max-width: 768px) {
   .ticket-popup {
     padding: 10px; /* Reduced padding for mobile */
-    max-width: 95%; /* Max width for mobile devices */
+    min-width: 100%;
+    max-width: 100%; 
+
   }
 
   .ticket-item {
@@ -62,4 +77,9 @@
     width: 100%; 
     margin-bottom: 10px; 
   }
+}
+.ticket-header {
+  text-align: center; /* Center align the text */
+  font-weight: bold; /* Ensure the text is bold */
+  margin: 0; /* Remove any default margin */
 }
