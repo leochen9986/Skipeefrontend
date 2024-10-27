@@ -12,14 +12,16 @@ export const ViewTicketPrice = ({ amount, site }) => {
       <span style={{ fontSize: '24px' }}> {/* Main amount with larger font */}
         £ <strong>{amount}</strong>
       </span>
-      <br />
-      <span style={{ fontSize: '12px' }}> {/* Fees with smaller font */}
-        - £{isNaN(calculateComission(amount)) ? '0.0' : calculateComission(amount)} fees
-        <br />
-        + £{isNaN(calculateComission(amount)) ? '0.0' : calculateComission(amount)} fees
-      </span>
+        {/* <br />
+        <span style={{ fontSize: '12px' }}> 
+          - £{isNaN(calculateComission(amount)) ? '0.0' : calculateComission(amount)} fees
+          <br />
+          + £{isNaN(calculateComission(amount)) ? '0.0' : calculateComission(amount)} fees
+        </span> */}
     </>
 
   )
   
 }
+
+

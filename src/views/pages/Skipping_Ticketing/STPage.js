@@ -584,12 +584,12 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
                           {new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })}
                         </span>
                       </div>
-                      {event.tickets.map((ticket, ticketIndex) => (
-                        <div key={ticketIndex}>
+                      {event.tickets[0] && (
+                        <div>
                           <div className="footer-space">
                             <span className="footer-label">Price</span>
                             <span className="footer-content">
-                              £{parseFloat(ticket.price).toFixed(2)}
+                              £{parseFloat(event.tickets[0].price).toFixed(2)}
                             </span>
                           </div>
                           <div className="footer-space">
@@ -614,10 +614,11 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
                               />{' '}
                               Last Entry
                             </span>
-                            <span className="footer-content">{/* Last entry data here */}</span>
+                            <span className="footer-content">{event.lastEntryTime}</span>
                           </div>
                         </div>
-                      ))}
+                      )}
+
                     </div>
                   </CCardFooter>
                 </CCard>

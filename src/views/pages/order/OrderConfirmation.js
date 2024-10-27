@@ -12,6 +12,7 @@ import { format } from 'date-fns'
 import paymentfailedIcon from 'src/assets/icon_svg/paymentfailed.svg'; 
 import eventPNG from 'src/assets/icon_svg/event.png'; 
 import select_ticketIcon from 'src/assets/icon_svg/select_ticket.svg';
+import select_queueIcon from 'src/assets/icon_svg/select_queue.svg';
 import OC_pplIcon from 'src/assets/icon_svg/OC_ppl.svg';
 import OC_flagIcon from 'src/assets/icon_svg/OC_flag.svg';
 import OC_timeIcon from 'src/assets/icon_svg/OC_time.svg';
@@ -125,9 +126,12 @@ const OrderConfirmation = () => {
                 textAlign: 'center',
                 justifyContent:'center'
               }}
-            >            
-            <img src={select_ticketIcon} style={{paddingBottom: '2%',}}/>
-            <h3>Ticket Details</h3>
+            >
+              {ticket?.eventTicket?.name === "Queue Ticket" && <img src={select_queueIcon} style={{paddingBottom: '2%',}}/>}
+              {ticket?.eventTicket?.name === "Skip Ticket" && <img src={select_ticketIcon} style={{paddingBottom: '2%',}}/>}            
+            
+            {ticket?.eventTicket?.name === "Queue Ticket" && <h3>Queue Details</h3>}
+            {ticket?.eventTicket?.name === "Skip Ticket" && <h3>Skip Details</h3>}
             <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
 <div style={{ width: '100%', margin: '10px', backgroundColor: 'white' }}> {/* Set background color to white */}
   <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
