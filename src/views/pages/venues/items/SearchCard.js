@@ -240,21 +240,18 @@ const SearchCard = ({ event}) => {
 
 const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
   const [selectedTicket, setSelectedTicket] = useState(null)
-  console.log(new Date(tickets[0].saleStartTime));
-  console.log(new Date());
 
   return (
-    <div className="ticket-popup-overlay" >
+    <div className="ticket-popup-overlay">
       <div className="ticket-popup">
-        <h2  style={{fontWeight:'bold'}}>Select a Ticket</h2>
-        <div className="ticket-list" >
-        {tickets
+        <h2 className="ticket-header" style={{ fontWeight: 'bold' }}>Select a Ticket</h2>
+        <div className="ticket-list">
+          {tickets
             .filter(
               (ticket) =>
                 new Date(ticket.saleStartTime) < new Date() &&
                 new Date(ticket.saleEndTime) > new Date(),
             )
-
             .map((ticket) => (
               <div
                 key={ticket._id}
@@ -264,55 +261,69 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
                     ? setSelectedTicket(ticket._id)
                     : toast.error('No tickets available');
                 }}
-                style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '10px' ,borderRadius:'15px', width:'45%',height:'100%'}} // Set padding here
+                style={{
+                  textAlign: 'center',
+                  borderRadius: '15px',
+                  width: '45%',
+                  height: 'auto',
+                }}
               >
-                <img src={ticket.name === "Regular Ticket" ? select_ticketIcon : select_queueIcon} alt="Ticket Icon" style={{ padding: '10px' }} />
-                <h3 className="ticket-name" style={{ padding: '10px' }}>{ticket.name}</h3>
-                <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
-                <p style={{ padding: '10px' }}>
+                <img 
+                  src={ticket.name === "Skip Ticket" ? select_ticketIcon : select_queueIcon} 
+                  alt="Ticket Icon" 
+                  style={{ padding: '5px', maxWidth: '50px', height: 'auto', display: 'block', margin: '0 auto' }} 
+                />
+                <h3 className="ticket-name" style={{ padding: '5px', margin: '0' }}>{ticket.name}</h3>
+                <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '5px 0' }} />
+                <p style={{ padding: '5px', margin: '0' }}>
                   <ViewTicketPrice amount={ticket.price} site={event.site} />
                 </p>
-                <p style={{ padding: '10px' }}>{ticket.availableQuantity} Skips Available</p>
-                <div className={`event-date status-badge status-success`} >
+                {ticket.availableQuantity !== "999999" && (
+                  <p style={{ padding: '5px', margin: '0' }}>
+                    {`${ticket.availableQuantity} Skips Available`}
+                  </p>
+                )}
+                <div className="event-date status-badge status-success">
                   Available till {format(ticket.saleEndTime, 'dd/MM/yyyy')} at {format(ticket.saleEndTime, 'hh:mm a')}
                 </div>
               </div>
-
             ))}
         </div>
         <div className="popup-buttons" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <CButton
-          className="custom-button-analytics"
-          color="primary"
-          style={{
-            backgroundColor: 'black',
-            borderRadius: '30px',
-            width: '49%', // Adjust width to fit in the row
-          }}
-           onClick={onClose}
-        >
-          Go Back
-        </CButton>
-
-        <button
-          onClick={() => onProceed(selectedTicket)}
-          disabled={!selectedTicket}
-          style={{
-            backgroundColor: '#1DB954',
-            color: 'white',
-            borderRadius: '30px',
-            width: '49%', // Adjust width to fit in the row
-          }}
-        >
-          Proceed
-        </button>
-
-
-      </div>
-      <img src={processIcon}style={{padding:'20px'}}/>
+          <CButton
+            className="custom-button-analytics"
+            color="primary"
+            style={{
+              backgroundColor: 'black',
+              borderRadius: '30px',
+              width: '49%',
+            }}
+            onClick={onClose}
+          >
+            Go Back
+          </CButton>
+  
+          <button
+            onClick={() => onProceed(selectedTicket)}
+            disabled={!selectedTicket}
+            style={{
+              backgroundColor: '#1DB954',
+              color: 'white',
+              borderRadius: '30px',
+              width: '49%',
+            }}
+          >
+            Proceed
+          </button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+      <img src={processIcon} style={{ padding: '10px', maxWidth: '100%', height: 'auto' }} />
+    </div>
       </div>
     </div>
-  )
+  );
+  
+  
 }
 
 export default SearchCard
