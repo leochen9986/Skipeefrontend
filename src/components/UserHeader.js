@@ -93,7 +93,7 @@ const UserHeader = ({
             >
               <div className="d-flex align-items-center header-logo-change">
                 <CNavLink href="/" className="d-flex align-items-center logo-mobile">
-                  <img src={logo} alt="logo" width="90" className="me-2" />
+                  <img src={logo} alt="logo" width="110" className="me-2" />
                 </CNavLink>
 
                 <div

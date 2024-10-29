@@ -265,43 +265,53 @@ const SearchSection = () => {
   const debouncedSearch = useDebounce(search, 300)
 
   const handleSearch = () => {
-    nav(`/search?search=${search}`);
-    window.location.reload();
-  }
+    if (search) { // Ensure there's a search term before navigating
+      nav(`/search?search=${search}`);
+    }
+  };
+  const getAllEvents = async (query) => {
+    const venuApiController = new VenuApiController();
+    try {
+      const response = await venuApiController.getAllEvents(query);
+      setEvents(response);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
 
-  const getAllEvents = () => {
-    new VenuApiController().getAllEvents().then((res) => {
-      if (res.message) {
-        console.error(res.message)
-      } else {
-        setEvents(res)
-      }
-    })
-  }
-
-  useEffect(() => {
-    getAllEvents()
-  }, [])
 
   useEffect(() => {
+    // Call getAllEvents with the search query as soon as debouncedSearch updates
     if (debouncedSearch) {
-      const uniqueSuggestions = new Set()
+      getAllEvents({ search: debouncedSearch });
+    } else {
+      setEvents([]); // Clear events if the search is empty
+    }
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (events.length > 0) {
+      const uniqueSuggestions = new Set();
       const filtered = events
         ?.flatMap((event) => [
           { type: 'event', name: event?.name ?? '', _id: event?._id ?? '' },
           { type: 'site', name: event?.site?.name ?? '', _id: event?.site?._id ?? '' },
         ])
         .filter((suggestion) => {
-          const isUnique = !uniqueSuggestions.has(suggestion.name.toLowerCase())
+          const isUnique = !uniqueSuggestions.has(suggestion.name.toLowerCase());
           if (isUnique && suggestion.name) {
-            uniqueSuggestions.add(suggestion.name.toLowerCase())
+            uniqueSuggestions.add(suggestion.name.toLowerCase());
           }
-          return isUnique && suggestion.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-        })
+          return (
+            isUnique && suggestion.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+          );
+        });
 
-      setFilteredSuggestions(filtered)
+      setFilteredSuggestions(filtered);
+    } else {
+      setFilteredSuggestions([]); // Clear suggestions if no events are found
     }
-  }, [debouncedSearch, events])
+  }, [events, debouncedSearch]);
 
   const handleSelect = (suggestion) => {
     setSearch(suggestion.name)

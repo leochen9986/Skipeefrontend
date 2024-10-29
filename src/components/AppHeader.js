@@ -75,7 +75,9 @@ const AppHeader = () => {
   return (
     // <CHeader position="sticky" ref={headerRef}>
     <CContainer className="border-bottom px-4 py-3 d-flex justify-content-between align-items-center" fluid style={{backgroundColor:"white"}}>
+          <CNavLink href="/" className="d-flex align-items-center logo-mobile">
           <CImage src={logo} height={45} /> 
+          </CNavLink>
         <span className="manage-text">Manage</span>
         {/* <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
