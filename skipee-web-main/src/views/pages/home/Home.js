@@ -163,6 +163,7 @@ const HeroSection = () => {
   }, [])
 
   useEffect(() => {
+    console.log("Hey");
     if (debouncedSearch) {
       const uniqueSuggestions = new Set()
       const filtered = events

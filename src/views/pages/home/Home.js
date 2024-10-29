@@ -51,6 +51,8 @@ const benefits = [
 ]
 
 const Home = () => {
+
+  
   const [isHomeInView, setIsHomeInView] = useState(false);
   const [isAboutInView, setIsAboutInView] = useState(false);
   const [isContactInView, setIsContactInView] = useState(false);
@@ -97,12 +99,12 @@ const Home = () => {
       </div>
         <BenefitsSection />
       
-      <div id="about-section">
+        <div id="about-section" style={{ paddingTop: '80px', marginTop: '-80px' }}>
         <AboutUsDiv />
       </div>
-      
+            
         <CCol className="text-center" style={{ marginTop: '3%', marginBottom: '3%' }}>
-        <div id="contact-section">
+        <div id="contact-section"  style={{ paddingTop: '80px', marginTop: '80px' }}>
           <h2 className="fw-bold display-4">
             Feel Free to <span className="highlight">Contact Us</span>
           </h2>
@@ -145,42 +147,54 @@ const HeroSection = () => {
   const debouncedSearch = useDebounce(search, 300)
 
   const handleSearch = () => {
-    nav(`/search?search=${search}`)
-  }
-
-  const getAllEvents = () => {
-    new VenuApiController().getAllEvents().then((res) => {
-      if (res.message) {
-        console.error(res.message)
-      } else {
-        setEvents(res)
-      }
-    })
-  }
-
-  useEffect(() => {
-    getAllEvents()
-  }, [])
+    if (search) { // Ensure there's a search term before navigating
+      nav(`/search?search=${search}`);
+    }
+  };
+  const getAllEvents = async (query) => {
+    const venuApiController = new VenuApiController();
+    try {
+      const response = await venuApiController.getAllEvents(query);
+      setEvents(response);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+  };
 
   useEffect(() => {
+    // Call getAllEvents with the search query as soon as debouncedSearch updates
     if (debouncedSearch) {
-      const uniqueSuggestions = new Set()
+      getAllEvents({ search: debouncedSearch });
+    } else {
+      setEvents([]); // Clear events if the search is empty
+    }
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (events.length > 0) {
+      const uniqueSuggestions = new Set();
       const filtered = events
         ?.flatMap((event) => [
           { type: 'event', name: event?.name ?? '', _id: event?._id ?? '' },
           { type: 'site', name: event?.site?.name ?? '', _id: event?.site?._id ?? '' },
         ])
         .filter((suggestion) => {
-          const isUnique = !uniqueSuggestions.has(suggestion.name.toLowerCase())
+          const isUnique = !uniqueSuggestions.has(suggestion.name.toLowerCase());
           if (isUnique && suggestion.name) {
-            uniqueSuggestions.add(suggestion.name.toLowerCase())
+            uniqueSuggestions.add(suggestion.name.toLowerCase());
           }
-          return isUnique && suggestion.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-        })
+          return (
+            isUnique && suggestion.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+          );
+        });
 
-      setFilteredSuggestions(filtered)
+      setFilteredSuggestions(filtered);
+    } else {
+      setFilteredSuggestions([]); // Clear suggestions if no events are found
     }
-  }, [debouncedSearch, events])
+  }, [events, debouncedSearch]);
+
+
 
   const handleSelect = (suggestion) => {
     setSearch(suggestion.name)
@@ -218,13 +232,16 @@ const HeroSection = () => {
                 type="text"
                 value={search}
                 onChange={(e) => {
+                  const inputValue = e.target.value;
+                  // Remove "=" characters from the input
+                  const sanitizedValue = inputValue.replace(/=/g, '');
                   setFilteredSuggestions([]);
-                  setSearch(e.target.value);
+                  setSearch(sanitizedValue);
                 }}
                 placeholder="Search Club or City"
                 aria-label="Search"
                 aria-describedby="button-addon2"
-                className="input-with-icon" // Custom class for input styling
+                className="input-with-icon"
               />
             </div>
             <CButton color="primary" id="button-addon2" onClick={handleSearch} className='btn-search'>
@@ -338,7 +355,7 @@ const AboutUsDiv = () => {
             </div>
             <div className="about-img d-flex justify-content-center" style={{ maxWidth: '100%', height: 'auto' }}>
               <img 
-                src="/assets/about_4.png" 
+                src="/assets/about_4_2.png" 
                 alt="about" 
               />
             </div>
