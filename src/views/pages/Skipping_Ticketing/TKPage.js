@@ -649,7 +649,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
             height: '43px',
           }}
         >
-          Add Skipping
+          Add Ticketing
           <span style={{ fontSize: '2rem', marginLeft: '5px', fontWeight: '200' }}>+</span>
         </CButton>
       </div>
@@ -659,7 +659,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
         onClose={() => {
           setPopupVisibleW(false);
         }}
-        title="Add Skipping"
+        title="Add Ticketing"
         children={popupChildrenW}
       />
     </>

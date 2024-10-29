@@ -997,6 +997,7 @@ const AddSkipping = ({ siteId }) => {
       await handleSave(dayName, false);
     }
     toast.success('All changes saved successfully.');
+    onClose();
   };
 
   const getNextDateOfDay = (dayName) => {
