@@ -241,6 +241,7 @@ const SearchCard = ({ event}) => {
 const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
   const [selectedTicket, setSelectedTicket] = useState(null)
 
+
   return (
     <div className="ticket-popup-overlay">
       <div className="ticket-popup">
@@ -253,6 +254,7 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
                 new Date(ticket.saleEndTime) > new Date(),
             )
             .map((ticket) => (
+
               <div
                 key={ticket._id}
                 className={`ticket-item ${selectedTicket === ticket._id ? 'selected' : ''}`}
@@ -269,7 +271,7 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
                 }}
               >
                 <img 
-                  src={ticket.name === "Skip Ticket" ? select_ticketIcon : select_queueIcon} 
+                  src={ticket.name === "Skips" ? select_ticketIcon : select_queueIcon} 
                   alt="Ticket Icon" 
                   style={{ padding: '5px', maxWidth: '50px', height: 'auto', display: 'block', margin: '0 auto' }} 
                 />
@@ -278,7 +280,8 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
                 <p style={{ padding: '5px', margin: '0' }}>
                   <ViewTicketPrice amount={ticket.price} site={event.site} />
                 </p>
-                {ticket.availableQuantity !== "999999" && (
+
+                {event.limitQuantity && (
                   <p style={{ padding: '5px', margin: '0' }}>
                     {`${ticket.availableQuantity} Skips Available`}
                   </p>

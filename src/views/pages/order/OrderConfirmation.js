@@ -36,6 +36,7 @@ const OrderConfirmation = () => {
     const fetchTicket = async () => {
       try {
         const response = await new TicketApiController().getTicket(ticketId)
+        console.log(response);
         setTicket(response)
         setLoading(false)
       } catch (error) {
@@ -128,10 +129,10 @@ const OrderConfirmation = () => {
               }}
             >
               {ticket?.eventTicket?.name === "Queue Ticket" && <img src={select_queueIcon} style={{paddingBottom: '2%',}}/>}
-              {ticket?.eventTicket?.name === "Skip Ticket" && <img src={select_ticketIcon} style={{paddingBottom: '2%',}}/>}            
+              {ticket?.eventTicket?.name === "Skips" && <img src={select_ticketIcon} style={{paddingBottom: '2%',}}/>}            
             
             {ticket?.eventTicket?.name === "Queue Ticket" && <h3>Queue Details</h3>}
-            {ticket?.eventTicket?.name === "Skip Ticket" && <h3>Skip Details</h3>}
+            {ticket?.eventTicket?.name === "Skips" && <h3>Skip Details</h3>}
             <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
 <div style={{ width: '100%', margin: '10px', backgroundColor: 'white' }}> {/* Set background color to white */}
   <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
@@ -197,7 +198,7 @@ const OrderConfirmation = () => {
         </p>
       </div>
       <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-        {ticket?.eventTicket?.event?.location}
+      {ticket?.eventTicket?.site?.name} - {ticket?.eventTicket?.site?.location}
       </p>
     </CCol>
   </CRow>

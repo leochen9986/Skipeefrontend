@@ -118,7 +118,7 @@ const TicketAccordion = ({ entryTicket, onAddTicket, handleDeleteTicket }) => {
             className="add-button my-3"
             onClick={() => onAddTicket('queue')}
           >
-            Add Queue Skip Ticket
+            Add Queue Skips
           </CButton>
           <br />
           <TicketTable

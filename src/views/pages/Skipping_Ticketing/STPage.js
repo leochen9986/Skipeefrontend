@@ -76,7 +76,8 @@ const STPage = ({ site }) => {
 
 
   const fetchOwnedSites = (userId) => {
-    new VenuApiController().getSitesByOwnerSkipping(userId).then((res) => {
+    new VenuApiController().getSitesByOwner(userId, 'skipping').then((res) => {
+      console.log("Nani");
       if (res.message) {
         toast.error(res.message);
       } else {
@@ -472,6 +473,12 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
   const [popupChildrenW, setPopupChildrenW] = useState(null);
   const [isToggled, setIsToggled] = useState(true);
 
+  const handleAddSkippingClose = () => {
+    setPopupVisibleW(false); // Close the Add Skipping modal
+    loadEvents(); // Refresh the events list
+  };
+
+
   
   const handleToggle = (index, type) => {
     const updatedToggles = [...toggles];
@@ -481,8 +488,8 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
 
 
   const loadEvents = () => {
-    if (!query || Object.keys(query).length === 0) {
-      // If query is undefined or empty, don't send the API request
+    if (!query || Object.keys(query).length === 0 || !query.siteId) {
+      // If query is undefined, empty, or siteId is undefined, don't send the API request
       return;
     }
     
@@ -634,7 +641,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
           color="success text-white"
           siteId={siteId}
           onClick={() => {
-            setPopupChildrenW(<AddSkipping siteId={siteId} />);
+            setPopupChildrenW(<AddSkipping siteId={siteId} onClose={handleAddSkippingClose} />);
             setPopupVisibleW(true);
           }}
           style={{
@@ -671,6 +678,10 @@ const PastEventsTab = ({ query, event, onProceed }) => {
   const [eventsList, setEventsList] = React.useState([]);
 
   const loadEvents = () => {
+    if (!query || Object.keys(query).length === 0 || !query.siteId) {
+      // If query is undefined, empty, or siteId is undefined, don't send the API request
+      return;
+    }
     // API call
     new VenuApiController().getAllEvents(query).then((res) => {
       if (res && !res.message) {
@@ -727,7 +738,7 @@ const PastEventsTab = ({ query, event, onProceed }) => {
   );
 };
 
-const AddSkipping = ({ siteId }) => {
+const AddSkipping = ({ siteId , onClose }) => {
   const [eventData, setEventData] = useState({});
   const [loading, setLoading] = useState(true);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -926,7 +937,7 @@ const AddSkipping = ({ siteId }) => {
         if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
           const ticketId = updatedEvent.tickets[0]._id;
           const ticketUpdateData = {
-            name: 'Skip Ticket', // or use updatedEvent.tickets[0].name if available
+            name: 'Skips', // or use updatedEvent.tickets[0].name if available
             type: 'skip',        // or use updatedEvent.tickets[0].type
             price: parseFloat(updatedEvent.price),
             totalQuantity: updatedEvent.limitQuantity
@@ -1049,7 +1060,7 @@ const AddSkipping = ({ siteId }) => {
   const createTicketForEvent = async (eventId, updatedEvent, dayName) => {
     try {
       const ticketData = {
-        name: 'Skip Ticket',
+        name: 'Skips',
         type: 'skip',
         price: parseFloat(updatedEvent.price),
         totalQuantity: updatedEvent.limitQuantity
@@ -1117,6 +1128,28 @@ const handleSingleEventFileChange = async (e, index) => {
 const handleDeleteSingleEventImage = (index) => {
   // Remove image from state
   handleSingleEventInputChange(index, 'image', null);
+  
+};
+
+
+const fetchEvents = async () => {
+  try {
+    const res = await new VenuApiController().getAllEvents({ siteId });
+    // Update eventData accordingly (same as in useEffect)
+    // ...
+    setLoading(false);
+  } catch (error) {
+    console.error(error);
+    setLoading(false);
+  }
+};
+
+
+const handleAddSESkipClose = () => {
+  setPopupVisible(false); // Close the Add Single Event modal
+  // Optionally, refresh the events within AddSkipping if needed
+  setLoading(true);
+  fetchEvents();
 };
 
 const handleSingleEventSave = async (index, showToast = true) => {
@@ -1163,7 +1196,7 @@ const handleSingleEventSave = async (index, showToast = true) => {
         );
 
         const ticketUpdateData = {
-          name: 'Skip Ticket',
+          name: 'Skips',
           type: 'skip',
           price: parseFloat(updatedEvent.price),
           totalQuantity: updatedEvent.limitQuantity
@@ -1241,7 +1274,7 @@ const createTicketForSingleEvent = async (eventId, updatedEvent) => {
     );
 
     const ticketData = {
-      name: 'Skip Ticket',
+      name: 'Skips',
       type: 'skip',
       price: parseFloat(updatedEvent.price),
       totalQuantity: updatedEvent.limitQuantity
@@ -1761,6 +1794,7 @@ const handleSaveAllSingleEvents = async () => {
             setPopupChildren(
               <AddSESkip
                 siteId={siteId}
+                onClose={handleAddSESkipClose}
                 onEventAdded={() => {
                   // Refresh events after adding a new one
                   setLoading(true);
@@ -1874,7 +1908,7 @@ const EnterQuantity = ({ initialQuantity, onSave }) => {
 
 
 
-const AddSESkip = ({ siteId, onEventAdded }) => {
+const AddSESkip = ({ siteId, onClose, onEventAdded  }) => {
   const [name, setName] = useState('');
   const [date, setDate] = useState(null); // Use null to start with no date selected
   const [price, setPrice] = useState('');
@@ -1994,7 +2028,7 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
 
         // Prepare ticket data
         const ticketData = {
-          name: 'Skip Ticket', // Customize as needed
+          name: 'Skips', // Customize as needed
           type: 'skip',
           price: parseFloat(price),
           totalQuantity: parseInt(tickets),
@@ -2007,6 +2041,7 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
         const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
         if (ticketResponse && !ticketResponse.message) {
           toast.success('Event and ticket created successfully.');
+          onClose();
 
           // Call the onEventAdded callback to refresh events
           if (onEventAdded) {

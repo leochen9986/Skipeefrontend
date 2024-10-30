@@ -36,9 +36,11 @@ async getAllEvents(query) {
 });
   }
 
-  async getSitesByOwnerSkipping(ownerId) {
-    return await this.apiService.get(`/sites?ownerId=${ownerId}&skipping=true`);
+  async getSitesByOwner(ownerId, siteType = 'skipping') {
+    return await this.apiService.get(`/sites?ownerId=${ownerId}&${siteType}=true`);
   }
+
+
   uploadLogo(siteId, logoData) {
     console.log(logoData);
     return this.apiService.put(`/sites/${siteId}/upload-logo`, logoData);

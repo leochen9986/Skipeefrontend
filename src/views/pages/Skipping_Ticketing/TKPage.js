@@ -76,7 +76,7 @@ const TKPage = ({ site }) => {
 
 
   const fetchOwnedSites = (userId) => {
-    new VenuApiController().getSitesByOwnerSkipping(userId).then((res) => {
+    new VenuApiController().getSitesByOwner(userId, 'ticketing').then((res) => {
       if (res.message) {
         toast.error(res.message);
       } else {
@@ -481,10 +481,11 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
 
 
   const loadEvents = () => {
-    if (!query || Object.keys(query).length === 0) {
-      // If query is undefined or empty, don't send the API request
+    if (!query || Object.keys(query).length === 0 || !query.siteId) {
+      // If query is undefined, empty, or siteId is undefined, don't send the API request
       return;
     }
+    
     
 
     new VenuApiController().getAllEvents(query).then((res) => {
@@ -671,6 +672,11 @@ const PastEventsTab = ({ query, event, onProceed }) => {
   const [eventsList, setEventsList] = React.useState([]);
 
   const loadEvents = () => {
+    if (!query || Object.keys(query).length === 0 || !query.siteId) {
+      // If query is undefined, empty, or siteId is undefined, don't send the API request
+      return;
+    }
+    
     // API call
     new VenuApiController().getAllEvents(query).then((res) => {
       if (res && !res.message) {
@@ -931,7 +937,7 @@ const AddTicketing = ({ siteId }) => {
                 for (let i = 0; i < 2; i++) {
                     const ticketData = i === 0 
                         ? {
-                            name: 'Skip Ticket',
+                            name: 'Skips',
                             type: 'skip',
                             price: null,
                             totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
@@ -1000,7 +1006,7 @@ const AddTicketing = ({ siteId }) => {
               
                   if (i === 0) {
                       ticketData = {
-                          name: 'Skip Ticket',
+                          name: 'Skips',
                           type: 'skip',
                           price: 0,
                           totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
@@ -2051,7 +2057,7 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
 
         // Prepare ticket data
         const ticketData = {
-          name: 'Skip Ticket', // Customize as needed
+          name: 'Skips', // Customize as needed
           type: 'skip',
           price: parseFloat(price),
           totalQuantity: parseInt(tickets),
