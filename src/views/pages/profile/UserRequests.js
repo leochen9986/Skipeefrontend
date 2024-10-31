@@ -16,6 +16,7 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CModal, CModalBody, CModalFooter, CModalHeader
 } from '@coreui/react';
 import React, { useEffect, useState } from 'react';
 import { AuthApiController } from '../../../api/AuthApiController';
@@ -27,6 +28,24 @@ const UserRequests = ({ profile }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState('');
+
+  const [visible, setVisible] = useState(false);
+const [selectedRequest, setSelectedRequest] = useState(null);
+
+const handleApprove = async (userId, index) => {
+  try {
+    setLoading(true);
+    await new AuthApiController().approveRequest(userId);
+    // Update the request's status in the state
+    const updatedRequests = [...requests];
+    updatedRequests[index].approved = true;
+    setRequests(updatedRequests);
+    setLoading(false);
+  } catch (error) {
+    console.error('Error approving request:', error);
+    setLoading(false);
+  }
+};
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -159,16 +178,28 @@ const UserRequests = ({ profile }) => {
               <CTableBody>
                 {filteredRequests.map((request, index) => (
                   <CTableRow key={index}>
-                    <CTableDataCell style={{ paddingTop: '20px', paddingBottom: '20px', textAlign: 'left' }}>
+                    <CTableDataCell
+                      style={{ paddingTop: '20px', paddingBottom: '20px', textAlign: 'left' }}
+                    >
                       {request.email}
                     </CTableDataCell>
                     <CTableDataCell>
                       {new Date(request.createdAt).toLocaleDateString('en-GB')}
                     </CTableDataCell>
                     <CTableDataCell>
-                      <span className={`status-badge ${getStatusClass(request.approved ? 'Approved' : 'Declined')}`}>
-                        {request.approved ? 'Approved' : 'Declined'}
-                      </span>
+                      {request.approved ? (
+                        <span className={`status-badge ${getStatusClass('Approved')}`}>
+                          Approved
+                        </span>
+                      ) : (
+                        <CButton
+                          color="success"
+                          size="sm"
+                          onClick={() => handleApprove(request._id, index)}
+                        >
+                          Approve
+                        </CButton>
+                      )}
                     </CTableDataCell>
                   </CTableRow>
                 ))}
