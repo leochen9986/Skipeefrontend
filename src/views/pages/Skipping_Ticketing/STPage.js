@@ -2435,7 +2435,10 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
         <CButton color="success text-white" className="model-save-btn" type="submit">
           Save
         </CButton>
-        <CButton color="secondary" className="ml-2" onClick={onClose}>
+      </div>
+
+      <div style={{ padding: '5px 0px' }}>
+        <CButton color="secondary" className="model-save-btn" onClick={onClose}>
           Cancel
         </CButton>
       </div>

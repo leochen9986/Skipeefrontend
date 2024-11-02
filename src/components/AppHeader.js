@@ -78,7 +78,7 @@ const AppHeader = () => {
           <CNavLink href="/" className="d-flex align-items-center logo-mobile">
           <CImage src={logo} height={45} /> 
           </CNavLink>
-        <span className="manage-text">Manage</span>
+        <span className="manage-text">Manage Portal</span>
         {/* <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
           style={{ marginInlineStart: '-14px' }}

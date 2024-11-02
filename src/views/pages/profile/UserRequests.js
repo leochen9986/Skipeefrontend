@@ -106,7 +106,7 @@ const handleApprove = async (userId, index) => {
   return (
     <>
       <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', padding: '20px' }}>
-        <div className="title-bold">Join Requests</div>
+        <div className="title-bold">User Requests</div>
         <div style={{ display: 'flex', alignItems: 'right', justifyContent: 'flex-end', gap: '20px', width: '100%' }}>
           <div style={{ position: 'relative', width: '40%' }}>
             <CFormInput
