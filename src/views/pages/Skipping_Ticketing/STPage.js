@@ -786,17 +786,24 @@ const AddSkipping = ({ siteId , onClose }) => {
         });
 
         const fetchedSingleEvents = [];
-        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set time to midnight for accurate comparison
+  
 
         if (res && !res.message) {
           // Process the fetched events
           res.forEach((event) => {
 
+            if (event.status === 'completed') {
+              return; // Skip completed events
+            }
+            
             if (!event.singleEvent) {
               // Group recurring events by day of the week
               const eventDate = new Date(event.date);
               const dayIndex = eventDate.getDay();
               const dayName = daysOfWeek.find((day) => day.index === dayIndex)?.name;
+              console.log( event.name);
               
               if (dayName) {
                 initialEventData[dayName] = {
@@ -908,54 +915,77 @@ const AddSkipping = ({ siteId , onClose }) => {
   const handleSave = async (dayName, showToast = true) => {
     const updatedEvent = eventData[dayName];
     try {
+      // Default the event name to the day name if not set
+      if (!updatedEvent.name || updatedEvent.name.trim() === '') {
+        updatedEvent.name = dayName;
+      }
+  
       if (updatedEvent.status) {
         // Validate required fields
-        const requiredFields = ['name', 'startTime', 'endTime', 'price'];
+        const requiredFields = ['startTime', 'endTime', 'price'];
         const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
-
+  
         if (missingFields.length > 0) {
           toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
           return;
         }
       }
-
+  
       if (updatedEvent.eventId) {
-        // Update existing event
-        const eventUpdateData = {
-          name: updatedEvent.name,
-          startTime: updatedEvent.startTime,
-          endTime: updatedEvent.endTime,
-          lastEntryTime: updatedEvent.lastEntryTime,
-          status: updatedEvent.status ? 'upcoming' : 'on hold',
-          image: updatedEvent.image,
-          limitQuantity: updatedEvent.limitQuantity,
-        };
-
-        await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
-
-        // Update ticket if necessary
-        if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
-          const ticketId = updatedEvent.tickets[0]._id;
-          const ticketUpdateData = {
-            name: 'Skips', // or use updatedEvent.tickets[0].name if available
-            type: 'skip',        // or use updatedEvent.tickets[0].type
-            price: parseFloat(updatedEvent.price),
-            totalQuantity: updatedEvent.limitQuantity
-              ? parseInt(updatedEvent.quantity) || 300
-              : 999999,
-            availableQuantity: updatedEvent.limitQuantity
-              ? parseInt(updatedEvent.quantity) || 300
-              : 999999,
-            saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-            saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime,updatedEvent.endTime).toISOString(),
+        const existingEvent = await new VenuApiController().getEvent(updatedEvent.eventId);
+        console.log(existingEvent);
+  
+        // Check if existing event date has passed
+        const existingEventDate = new Date(existingEvent.date);
+        existingEventDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+  
+        if (existingEventDate < today) {
+          // Existing event date has passed, create a new event
+          updatedEvent.eventId = null; // Reset eventId to indicate creation of a new event
+        } else {
+          // Update existing event
+          const eventUpdateData = {
+            name: updatedEvent.name,
+            startTime: updatedEvent.startTime,
+            endTime: updatedEvent.endTime,
+            lastEntryTime: updatedEvent.lastEntryTime,
+            status: updatedEvent.status ? 'upcoming' : 'on hold',
+            image: updatedEvent.image,
+            limitQuantity: updatedEvent.limitQuantity,
           };
-          await new VenuApiController().updateTicket(ticketId, ticketUpdateData);
+  
+          await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
+  
+          // Update ticket if necessary
+          if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
+            const ticketId = updatedEvent.tickets[0]._id;
+            const ticketUpdateData = {
+              name: 'Skips',
+              type: 'skip',
+              price: parseFloat(updatedEvent.price),
+              totalQuantity: updatedEvent.limitQuantity
+                ? parseInt(updatedEvent.quantity) || 300
+                : 999999,
+              availableQuantity: updatedEvent.limitQuantity
+                ? parseInt(updatedEvent.quantity) || 300
+                : 999999,
+              saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+              saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
+            };
+            await new VenuApiController().updateTicket(ticketId, ticketUpdateData);
+          }
+  
+          if (showToast) {
+            toast.success('Event updated successfully.');
+          }
+  
+          return; // Exit the function after updating
         }
-
-        if (showToast) {
-          toast.success('Event updated successfully.');
-        }
-      } else if (updatedEvent.status) {
+      }
+  
+      if (updatedEvent.status && !updatedEvent.eventId) {
         // Create new event
         const eventDataToCreate = {
           name: updatedEvent.name,
@@ -967,15 +997,30 @@ const AddSkipping = ({ siteId , onClose }) => {
           status: 'upcoming',
           siteId: siteId,
           date: getNextDateOfDay(dayName).toISOString(),
-          isSingleEvent : false,
+          isSingleEvent: false,
         };
-
+  
         const eventResponse = await new VenuApiController().createEvent(eventDataToCreate);
         if (eventResponse && !eventResponse.message) {
           const eventId = eventResponse._id;
-          // Create ticket for the new event
-          const ticketResponse = await createTicketForEvent(eventId, updatedEvent, dayName);
-
+  
+          // Create skipping ticket for the new event
+          const ticketData = {
+            name: 'Skips',
+            type: 'skip',
+            price: parseFloat(updatedEvent.price),
+            totalQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            availableQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+            saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
+          };
+  
+          const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
+  
           if (ticketResponse) {
             if (showToast) {
               toast.success('Event and ticket created successfully.');
@@ -2221,8 +2266,8 @@ const AddSESkip = ({ siteId, onClose, onEventAdded  }) => {
 
 const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('test@gmail.com');
+  const [phone, setPhone] = useState('+1234566');
   const [logo, setLogo] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -2308,7 +2353,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !phone || !logo || !selectedCountry || !selectedState) {
+    if (!name || !logo || !selectedCountry || !selectedState) {
       toast.warning('Please fill all required fields and upload a logo.');
       return;
     }
@@ -2318,6 +2363,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
       const logoUrl = await uploadLogoToFirebase(logo);
 
       const location = `${selectedState.label}, ${selectedCountry.label}`;
+
 
       const payload = {
         name,
@@ -2355,7 +2401,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
       </div>
 
       {/* Email */}
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <h3 className="setting-label">Email</h3>
         <CFormInput
           type="email"
@@ -2365,10 +2411,10 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
           size="lg"
           className="setting-input"
         />
-      </div>
+      </div> */}
 
       {/* Phone */}
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <h3 className="setting-label">Phone</h3>
         <CFormInput
           onChange={(e) => setPhone(e.target.value)}
@@ -2377,7 +2423,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
           size="lg"
           className="setting-input"
         />
-      </div>
+      </div> */}
 
       {/* Country Selection */}
       <div className="mb-3">

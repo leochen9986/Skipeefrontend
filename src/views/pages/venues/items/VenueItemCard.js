@@ -70,9 +70,10 @@ const SingleVenueItem = ({ site }) => {
                 <CCardImage 
                   src={site?.logo} 
                   className="rounded-top" 
-                  style={{ width: '30%',  
+                  style={{ width: '45%',  
                     height: '150px', 
-                    objectFit: 'fill' } }
+                    objectFit: 'fill',
+                  paddingRight:"10%" } }
                 />
               
                <div >

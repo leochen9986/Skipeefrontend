@@ -240,7 +240,10 @@ const SearchCard = ({ event}) => {
 
 const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
   const [selectedTicket, setSelectedTicket] = useState(null)
+  console.log(event.site.ticketing);
 
+  const isTicketingEnabled = event.site && event.site.ticketing;
+  const isSkippingEnabled = event.site && event.site.skipping;
 
   return (
     <div className="ticket-popup-overlay">
@@ -251,7 +254,15 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
             .filter(
               (ticket) =>
                 new Date(ticket.saleStartTime) < new Date() &&
-                new Date(ticket.saleEndTime) > new Date(),
+                new Date(ticket.saleEndTime) > new Date()&&
+                (
+                  isTicketingEnabled ? ticket.type === 'queue'||ticket.type === 'skip' : true
+                )
+                &&
+                (
+                  !isTicketingEnabled ? ticket.type === 'skip' : true
+                )
+
             )
             .map((ticket) => (
 

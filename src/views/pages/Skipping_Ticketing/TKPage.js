@@ -472,6 +472,11 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
   const [popupChildrenW, setPopupChildrenW] = useState(null);
   const [isToggled, setIsToggled] = useState(true);
 
+  const handleAddTicketingClose = () => {
+    setPopupVisibleW(false); // Close the Add Skipping modal
+    loadEvents(); // Refresh the events list
+  };
+
   
   const handleToggle = (index, type) => {
     const updatedToggles = [...toggles];
@@ -635,7 +640,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
           color="success text-white"
           siteId={siteId}
           onClick={() => {
-            setPopupChildrenW(<AddTicketing siteId={siteId} />);
+            setPopupChildrenW(<AddTicketing siteId={siteId} onClose={handleAddTicketingClose}/>);
             setPopupVisibleW(true);
           }}
           style={{
@@ -733,7 +738,7 @@ const PastEventsTab = ({ query, event, onProceed }) => {
   );
 };
 
-const AddTicketing = ({ siteId }) => {
+const AddTicketing = ({ siteId,onClose }) => {
   const [eventData, setEventData] = useState({});
   const [loading, setLoading] = useState(true);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -786,6 +791,9 @@ const AddTicketing = ({ siteId }) => {
         if (res && !res.message) {
           // Process the fetched events
           res.forEach((event) => {
+            if (event.status === 'completed') {
+              return; // Skip completed events
+            }
 
             if (!event.singleEvent) {
               // Group recurring events by day of the week
@@ -902,165 +910,147 @@ const AddTicketing = ({ siteId }) => {
 
   const handleSave = async (dayName, showToast = true) => {
     const updatedEvent = eventData[dayName];
-
+  
     try {
-        if (updatedEvent.status) {
-            // Validate required fields
-            const requiredFields = ['name', 'startTime', 'endTime', 'price'];
-            const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
-
-            if (missingFields.length > 0) {
-                toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
-                return;
-            }
+      if (!updatedEvent.name || updatedEvent.name.trim() === '') {
+        updatedEvent.name = dayName;
+      }
+      if (updatedEvent.status) {
+        // Validate required fields
+        const requiredFields = ['startTime', 'endTime', 'price'];
+        const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
+  
+        if (missingFields.length > 0) {
+          toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+          return;
         }
-
-        if (updatedEvent.eventId) {
-            // Update existing event
-            const eventUpdateData = {
-                name: updatedEvent.name,
-                startTime: updatedEvent.startTime,
-                endTime: updatedEvent.endTime,
-                lastEntryTime: updatedEvent.lastEntryTime,
-                status: updatedEvent.status ? 'upcoming' : 'on hold',
-                image: updatedEvent.image,
-                limitQuantity: updatedEvent.limitQuantity,
-            };
-
-            await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
-
-            // Ensure tickets array is properly structured
-            updatedEvent.tickets = updatedEvent.tickets || [];
-
-            if (updatedEvent.tickets.length === 0) {
-                // Create two tickets if there are no tickets
-                for (let i = 0; i < 2; i++) {
-                    const ticketData = i === 0 
-                        ? {
-                            name: 'Skips',
-                            type: 'skip',
-                            price: null,
-                            totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                            availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                            saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-                            saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
-                        }
-                        : {
-                            name: 'Queuess Ticket',
-                            type: 'queue',
-                            price: parseFloat(updatedEvent.price),
-                            totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                            availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                            saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-                            saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
-                        };
-
-                    // Create a new ticket
-                    const newTicket = await new VenuApiController().addTicket(updatedEvent.eventId, ticketData);
-                    updatedEvent.tickets.push(newTicket);
-                }
-            } else {
-                // Update existing ticket at index 1 if it exists
-                const ticketUpdateData = {
-                    name: 'Queue Skip',
-                    type: 'queue',
-                    price: parseFloat(updatedEvent.price),
-                    totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                    availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                    saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-                    saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
-                };
-
-                if (updatedEvent.tickets[1]) {
-                    await new VenuApiController().updateTicket(updatedEvent.tickets[1]._id, ticketUpdateData);
-                } else {
-                    const newTicket = await new VenuApiController().addTicket(updatedEvent.eventId, ticketUpdateData);
-                    updatedEvent.tickets[1] = newTicket;
-                }
-            }
-
-            if (showToast) {
-                toast.success('Event updated successfully.');
-            }
-        } else if (updatedEvent.status) {
-            // Create new event
-            const eventDataToCreate = {
-                name: updatedEvent.name,
-                startTime: updatedEvent.startTime,
-                endTime: updatedEvent.endTime,
-                lastEntryTime: updatedEvent.lastEntryTime,
-                image: updatedEvent.image,
-                limitQuantity: updatedEvent.limitQuantity,
-                status: 'upcoming',
-                siteId: siteId,
-                date: getNextDateOfDay(dayName).toISOString(),
-                isSingleEvent: false,
-            };
-
-            const eventResponse = await new VenuApiController().createEvent(eventDataToCreate);
-            if (eventResponse && !eventResponse.message) {
-                const eventId = eventResponse._id;
-
-                for (let i = 0; i < 2; i++) {
-                  let ticketData;
-              
-                  if (i === 0) {
-                      ticketData = {
-                          name: 'Skips',
-                          type: 'skip',
-                          price: 0,
-                          totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                          availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                          saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-                          saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
-                      };
-                  } else {
-                      ticketData = {
-                          name: 'Queue Ticket',
-                          type: 'queue',
-                          price: parseFloat(updatedEvent.price),
-                          totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                          availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
-                          saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
-                          saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
-                      };
-                  }
-              
-                  const newTicket = await new VenuApiController().addTicket(eventId, ticketData);
-                  updatedEvent.tickets.push(newTicket);
-              }
-              
-
-                if (showToast) {
-                    toast.success('Event and tickets created successfully.');
-                }
-
-                setEventData((prevData) => ({
-                    ...prevData,
-                    [dayName]: {
-                        ...prevData[dayName],
-                        eventId: eventId,
-                        isExistingEvent: true,
-                        tickets: updatedEvent.tickets,
-                    },
-                }));
-            } else {
-                toast.error('Failed to create event.');
-            }
+      }
+  
+      if (updatedEvent.eventId) {
+        // Update existing event
+        const eventUpdateData = {
+          name: updatedEvent.name,
+          startTime: updatedEvent.startTime,
+          endTime: updatedEvent.endTime,
+          lastEntryTime: updatedEvent.lastEntryTime,
+          status: updatedEvent.status ? 'upcoming' : 'on hold',
+          image: updatedEvent.image,
+          limitQuantity: updatedEvent.limitQuantity,
+        };
+  
+        await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
+  
+        // Ensure tickets array is properly structured
+        updatedEvent.tickets = updatedEvent.tickets || [];
+  
+        // Check if "Ticketing" ticket already exists
+        const ticketingTicket = updatedEvent.tickets.find(ticket => ticket.type === 'queue');
+  
+        const ticketData = {
+          name: 'Ticketing',
+          type: 'queue',
+          price: parseFloat(updatedEvent.price),
+          totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
+          availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
+          saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+          saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
+        };
+  
+        if (ticketingTicket) {
+          // Update the existing "Ticketing" ticket
+          await new VenuApiController().updateTicket(ticketingTicket._id, ticketData);
+        } else {
+          // Create "Skips" and "Ticketing" tickets if none exist
+          const ticketsData = [
+            ticketData,
+          ];
+  
+          for (const data of ticketsData) {
+            const newTicket = await new VenuApiController().addTicket(updatedEvent.eventId, data);
+            updatedEvent.tickets.push(newTicket);
+          }
         }
+  
+        if (showToast) {
+          toast.success('Event updated successfully.');
+        }
+      } else if (updatedEvent.status) {
+        // Create new event
+        const eventDataToCreate = {
+          name: updatedEvent.name,
+          startTime: updatedEvent.startTime,
+          endTime: updatedEvent.endTime,
+          lastEntryTime: updatedEvent.lastEntryTime,
+          image: updatedEvent.image,
+          limitQuantity: updatedEvent.limitQuantity,
+          status: 'upcoming',
+          siteId: siteId,
+          date: getNextDateOfDay(dayName).toISOString(),
+          isSingleEvent: false,
+        };
+  
+        const eventResponse = await new VenuApiController().createEvent(eventDataToCreate);
+        if (eventResponse && !eventResponse.message) {
+          const eventId = eventResponse._id;
+  
+          // Create both "Skips" and "Ticketing" tickets for the new event
+          const ticketsData = [
+            {
+              name: 'Skips',
+              type: 'skip',
+              price: 0,
+              totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
+              availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
+              saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+              saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
+            },
+            {
+              name: 'Ticketing',
+              type: 'queue',
+              price: parseFloat(updatedEvent.price),
+              totalQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
+              availableQuantity: updatedEvent.limitQuantity ? parseInt(updatedEvent.quantity) || 300 : 999999,
+              saleStartTime: getSaleStartTime(dayName, updatedEvent.startTime).toISOString(),
+              saleEndTime: getSaleEndTime(dayName, updatedEvent.startTime, updatedEvent.endTime).toISOString(),
+            },
+          ];
+  
+          updatedEvent.tickets = [];
+  
+          for (const data of ticketsData) {
+            const newTicket = await new VenuApiController().addTicket(eventId, data);
+            updatedEvent.tickets.push(newTicket);
+          }
+  
+          if (showToast) {
+            toast.success('Event and tickets created successfully.');
+          }
+  
+          setEventData((prevData) => ({
+            ...prevData,
+            [dayName]: {
+              ...prevData[dayName],
+              eventId: eventId,
+              isExistingEvent: true,
+              tickets: updatedEvent.tickets,
+            },
+          }));
+        } else {
+          toast.error('Failed to create event.');
+        }
+      }
     } catch (error) {
-        console.error(error);
-        toast.error('Failed to save event.');
+      console.error('Error saving event:', error);
+      toast.error('Failed to save event.');
     }
-};
-
-
+  };
 
   const handleSaveAll = async () => {
     for (const dayName of Object.keys(eventData)) {
       await handleSave(dayName, false);
     }
     toast.success('All changes saved successfully.');
+    onClose();
   };
 
   const getNextDateOfDay = (dayName) => {
@@ -1112,7 +1102,7 @@ const AddTicketing = ({ siteId }) => {
   const createTicketForEvent = async (eventId, updatedEvent, dayName) => {
     try {
       const ticketData = {
-        name: 'Queue Ticket',
+        name: 'Ticketing',
         type: 'queue',
         price: parseFloat(updatedEvent.price),
         totalQuantity: updatedEvent.limitQuantity
@@ -1212,35 +1202,55 @@ const handleSingleEventSave = async (index, showToast = true) => {
 
       await new VenuApiController().updateEvent(updatedEvent.eventId, eventUpdateData);
 
-      // Update ticket if necessary
+      // Update only the "Ticketing" ticket
       if (updatedEvent.tickets && updatedEvent.tickets.length > 0) {
-        const ticketId = updatedEvent.tickets[1]._id;
-        const saleStartTime = getSaleStartTimeForSingleEvent(
-          updatedEvent.date,
-          updatedEvent.startTime
-        );
-        const saleEndTime = getSaleEndTimeForSingleEvent(
-          updatedEvent.date,
-          updatedEvent.startTime,
-          updatedEvent.endTime
-        );
+        const ticketingTicket = updatedEvent.tickets.find(ticket => ticket.type === 'queue');
+        if (ticketingTicket) {
+          const saleStartTime = getSaleStartTimeForSingleEvent(
+            updatedEvent.date,
+            updatedEvent.startTime
+          );
+          const saleEndTime = getSaleEndTimeForSingleEvent(
+            updatedEvent.date,
+            updatedEvent.startTime,
+            updatedEvent.endTime
+          );
 
-        const ticketUpdateData = {
-          name: 'Queue Ticket',
-          type: 'queue',
-          price: parseFloat(updatedEvent.price),
-          totalQuantity: updatedEvent.limitQuantity
-            ? parseInt(updatedEvent.quantity) || 300
-            : 999999,
-          availableQuantity: updatedEvent.limitQuantity
-            ? parseInt(updatedEvent.quantity) || 300
-            : 999999,
-          saleStartTime: saleStartTime.toISOString(),
-          saleEndTime: saleEndTime.toISOString(),
-        };
-        await new VenuApiController().updateTicket(ticketId, ticketUpdateData);
+          const ticketUpdateData = {
+            name: 'Ticketing',
+            type: 'queue',
+            price: parseFloat(updatedEvent.price),
+            totalQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            availableQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            saleStartTime: saleStartTime.toISOString(),
+            saleEndTime: saleEndTime.toISOString(),
+          };
+
+          await new VenuApiController().updateTicket(ticketingTicket._id, ticketUpdateData);
+        } else {
+          // If the "Ticketing" ticket doesn't exist, create it
+          const ticketData = {
+            name: 'Ticketing',
+            type: 'queue',
+            price: parseFloat(updatedEvent.price),
+            totalQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            availableQuantity: updatedEvent.limitQuantity
+              ? parseInt(updatedEvent.quantity) || 300
+              : 999999,
+            saleStartTime: saleStartTime.toISOString(),
+            saleEndTime: saleEndTime.toISOString(),
+          };
+
+          const newTicket = await new VenuApiController().addTicket(updatedEvent.eventId, ticketData);
+          updatedEvent.tickets.push(newTicket);
+        }
       }
-
       if (showToast) {
         toast.success('Single event updated successfully.');
       }
@@ -1296,6 +1306,13 @@ const handleSingleEventSave = async (index, showToast = true) => {
 
 const createTicketForSingleEvent = async (eventId, updatedEvent) => {
   try {
+    // Validate input parameters
+    if (!eventId) throw new Error("Invalid event ID");
+    if (!updatedEvent || !updatedEvent.date || !updatedEvent.startTime || !updatedEvent.endTime) {
+      throw new Error("Missing required event data");
+    }
+
+    // Calculate sale start and end times
     const saleStartTime = getSaleStartTimeForSingleEvent(updatedEvent.date, updatedEvent.startTime);
     const saleEndTime = getSaleEndTimeForSingleEvent(
       updatedEvent.date,
@@ -1303,27 +1320,61 @@ const createTicketForSingleEvent = async (eventId, updatedEvent) => {
       updatedEvent.endTime
     );
 
-    const ticketData = {
-      name: 'Queue Ticket',
-      type: 'queue',
-      price: parseFloat(updatedEvent.price),
-      totalQuantity: updatedEvent.limitQuantity
-        ? parseInt(updatedEvent.quantity) || 300
-        : 999999,
-      availableQuantity: updatedEvent.limitQuantity
-        ? parseInt(updatedEvent.quantity) || 300
-        : 999999,
+    // Ensure price and quantity are valid
+    const price = parseFloat(updatedEvent.price);
+    if (isNaN(price)) throw new Error("Invalid price value");
+
+    const totalQuantity = updatedEvent.limitQuantity
+      ? parseInt(updatedEvent.quantity) || 300
+      : 999999;
+    const availableQuantity = updatedEvent.limitQuantity
+      ? parseInt(updatedEvent.quantity) || 300
+      : 999999;
+
+    // Ticket data for the "Skips" ticket
+    const skipsTicketData = {
+      name: 'Skips',
+      type: 'skip',
+      price: price, // Assuming "Skips" tickets are free or have a default price of 0
+      totalQuantity: totalQuantity,
+      availableQuantity: availableQuantity,
       saleStartTime: saleStartTime.toISOString(),
       saleEndTime: saleEndTime.toISOString(),
     };
 
-    const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
-    return ticketResponse;
+    // Ticket data for the "Queue Ticket"
+    const queueTicketData = {
+      name: 'Ticketing',
+      type: 'queue',
+      price: price,
+      totalQuantity: totalQuantity,
+      availableQuantity: availableQuantity,
+      saleStartTime: saleStartTime.toISOString(),
+      saleEndTime: saleEndTime.toISOString(),
+    };
+
+    // Create the "Skips" ticket
+    const skipsTicketResponse = await new VenuApiController().addTicket(eventId, skipsTicketData);
+    if (!skipsTicketResponse) throw new Error("Failed to create Skips ticket");
+
+    // Create the "Queue Ticket"
+    const queueTicketResponse = await new VenuApiController().addTicket(eventId, queueTicketData);
+    if (!queueTicketResponse) throw new Error("Failed to create Queue Ticket");
+
+    return { success: true, tickets: [skipsTicketResponse, queueTicketResponse] };
   } catch (error) {
-    console.error('Error creating ticket:', error);
-    return null;
+    console.error('Error creating tickets:', error.message);
+    return { success: false, error: error.message };
   }
 };
+
+const handleAddSESkipClose = () => {
+  setPopupVisible(false); // Close the Add Single Event modal
+  // Optionally, refresh the events within AddSkipping if needed
+  setLoading(true);
+  fetchEvents();
+};
+
 
 const getSaleStartTimeForSingleEvent = (date, startTime) => {
   const [startHours, startMinutes] = startTime.split(':');
@@ -1824,6 +1875,7 @@ const handleSaveAllSingleEvents = async () => {
             setPopupChildren(
               <AddSESkip
                 siteId={siteId}
+                onClose={handleAddSESkipClose}
                 onEventAdded={() => {
                   // Refresh events after adding a new one
                   setLoading(true);
@@ -1937,7 +1989,7 @@ const EnterQuantity = ({ initialQuantity, onSave }) => {
 
 
 
-const AddSESkip = ({ siteId, onEventAdded }) => {
+const AddSESkip = ({ siteId,onClose, onEventAdded }) => {
   const [name, setName] = useState('');
   const [date, setDate] = useState(null); // Use null to start with no date selected
   const [price, setPrice] = useState('');
@@ -2056,27 +2108,41 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
 
 
         // Prepare ticket data
-        const ticketData = {
-          name: 'Skips', // Customize as needed
-          type: 'skip',
-          price: parseFloat(price),
-          totalQuantity: parseInt(tickets),
-          availableQuantity: parseInt(tickets),
-          saleStartTime: saleStartTime.toISOString(),
-          saleEndTime: saleEndTime.toISOString(),
-        };
+        const ticketsData = [
+          {
+            name: 'Skips',
+            type: 'skip',
+            price: parseFloat(price), // Assuming Skips are free or have a different price logic
+            totalQuantity: parseInt(tickets),
+            availableQuantity: parseInt(tickets),
+            saleStartTime: saleStartTime.toISOString(),
+            saleEndTime: saleEndTime.toISOString(),
+          },
+          {
+            name: 'Ticketing', // Or 'Queue Ticket' if that's your naming convention
+            type: 'queue',
+            price: parseFloat(price),
+            totalQuantity: parseInt(tickets),
+            availableQuantity: parseInt(tickets),
+            saleStartTime: saleStartTime.toISOString(),
+            saleEndTime: saleEndTime.toISOString(),
+          },
+        ];
 
-        // Add the ticket to the event
-        const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
-        if (ticketResponse && !ticketResponse.message) {
-          toast.success('Event and ticket created successfully.');
-
-          // Call the onEventAdded callback to refresh events
-          if (onEventAdded) {
-            onEventAdded();
+        // Add both tickets to the event
+        for (const ticketData of ticketsData) {
+          const ticketResponse = await new VenuApiController().addTicket(eventId, ticketData);
+          if (!ticketResponse || ticketResponse.message) {
+            toast.error('Failed to create event tickets.');
+            return;
           }
-        } else {
-          toast.error('Failed to create event ticket.');
+        }
+
+        toast.success('Event and tickets created successfully.');
+
+        // Call the onEventAdded callback to refresh events
+        if (onEventAdded) {
+          onEventAdded();
         }
       } else {
         toast.error('Failed to create event.');
@@ -2086,7 +2152,6 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
       console.error('Error creating event:', error);
     }
   };
-
   return (
     <CForm className="w-100 px-4" style={{ backgroundColor: 'white' }}>
       {/* Event Name */}
@@ -2249,8 +2314,8 @@ const AddSESkip = ({ siteId, onEventAdded }) => {
 
 const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('test@gmail.com');
+  const [phone, setPhone] = useState('+1234567');
   const [logo, setLogo] = useState(null);
   const fileInputRef = useRef(null);
 
@@ -2336,7 +2401,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !email || !phone || !logo || !selectedCountry || !selectedState) {
+    if (!name || !logo || !selectedCountry || !selectedState) {
       toast.warning('Please fill all required fields and upload a logo.');
       return;
     }
@@ -2354,7 +2419,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
         logo: logoUrl,
         location,
         skipping: true,  // Set default values or include fields as needed
-        ticketing: false,
+        ticketing: true,
       };
 
       const response = await new VenuApiController().createVenue(payload);
@@ -2383,7 +2448,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
       </div>
 
       {/* Email */}
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <h3 className="setting-label">Email</h3>
         <CFormInput
           type="email"
@@ -2393,10 +2458,10 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
           size="lg"
           className="setting-input"
         />
-      </div>
+      </div> */}
 
       {/* Phone */}
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <h3 className="setting-label">Phone</h3>
         <CFormInput
           onChange={(e) => setPhone(e.target.value)}
@@ -2405,7 +2470,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
           size="lg"
           className="setting-input"
         />
-      </div>
+      </div> */}
 
       {/* Country Selection */}
       <div className="mb-3">
@@ -2463,7 +2528,10 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
         <CButton color="success text-white" className="model-save-btn" type="submit">
           Save
         </CButton>
-        <CButton color="secondary" className="ml-2" onClick={onClose}>
+      </div>
+
+      <div style={{ padding: '5px 0px' }}>
+        <CButton color="secondary" className="model-save-btn" onClick={onClose}>
           Cancel
         </CButton>
       </div>
@@ -2471,1116 +2539,4 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
   );
 };
 export default TKPage
-
-
-
-
-
-
-
-
-// import React, { useState, useEffect,useRef } from 'react'
-// import {
-//   CCard,
-//   CCardBody,
-//   CCardHeader,
-//   CCol,
-//   CContainer,
-//   CRow,
-//   CImage,
-//   CSpinner,
-//   CFormSelect,
-//   CFormInput,
-//   CTabs,
-//   CTabPanel,
-//   CTabContent,
-//   CTabList,
-//   CTab, 
-//   CButton ,
-//   CCardFooter,
-//   CTable ,
-//   CTableHead ,
-//   CTableRow ,
-//   CTableHeaderCell ,
-//   CTableBody ,
-//   CTableDataCell ,
-//   CForm ,
-// } from '@coreui/react'
-// import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
-// import Select from 'react-select';
-// import { DashboardApiController } from '../../../api/DashboardApiController'
-// import { toast } from 'react-toastify'
-// import searchIcon from 'src/assets/icon_svg/search.svg';
-// import dropdown_sortIcon from 'src/assets/icon_svg/dropdown_sort.svg';
-// import location_pinIcon from 'src/assets/icon_svg/location_pin.svg';
-// import location_pin_greyIcon from 'src/assets/icon_svg/location_pin_grey.svg';
-// import deleteIcon from 'src/assets/icon_svg/delete.svg';
-// import opening_timeIcon from 'src/assets/icon_svg/opening_time.svg';
-// import editIcon from 'src/assets/icon_svg/edit.svg';
-// import last_entryIcon from 'src/assets/icon_svg/last_entry.svg';
-// import chosen_fileIcon from 'src/assets/icon_svg/chosen_file.svg';
-// import PageTopBarST from '../../../components/PageTopBarST'
-// import PopupModelBaseVenue from 'src/views/popup/PopupModelBaseVenue.js'
-// import { VenuApiController } from '../../../api/VenuApiController'
-// import './STPage.scss'
-// import { ViewTicketPrice } from '../../forms/range/Range'
-// import { AuthApiController } from '../../../api/AuthApiController'
-// import PopupModelBaseWidth from '../../popup/PopupModelBaseWidth';
-// import PopupModelBase from '../../popup/PopupModelBase'
-// import DatePicker from 'react-datepicker';
-// import "react-datepicker/dist/react-datepicker.css";
-// import { storage } from "../../../firebase";
-// import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
-// const TKPage = ({ site }) => {
-//   const [profile, setProfile] = useState(null)
-//   const [sites, setSites] = useState([]);
-
-//   useEffect(() => {
-//     new AuthApiController().getProfile().then((res) => {
-//       if (res.message) {
-//         toast.error(res.message)
-//         new AuthApiController().logout()
-//       } else {
-//         if (res && !res.worksIn) {
-//           nav('/apply-now')
-//         }
-//         console.log('account page', res)
-//         setProfile(res)
-//         fetchOwnedSites(res._id);
-//       }
-//     })
-    
-//   }, [])
-
-
-
-//   const fetchOwnedSites = (userId) => {
-//     new VenuApiController().getSitesByOwnerSkipping(userId).then((res) => {
-//       if (res.message) {
-//         toast.error(res.message);
-//       } else {
-//         setSites(res);
-
-//         // Create tabs data
-//         const tabsData = res.map((site, index) => ({
-//           key: index + 1, // Start from 1, since 0 is "All"
-//           label: site.location || site.name,
-//           siteId: site._id,
-//         }));
-
-//         // Add the "All" tab at the beginning
-//         setTabs([ ...tabsData]);
-//       }
-//       setLoading(false);
-//     });
-//   };
-
-//   // if (loading || !profile) {
-//   //   return (
-//   //     <div className="d-flex justify-content-center align-items-center">
-//   //       <CSpinner />
-//   //     </div>
-//   //   );
-//   // }
-
-//   const [tabs, setTabs] = useState([
-//     { key: 1, label: 'Westbury St', content: <div>{/*Archived Content*/}</div> },
-//     { key: 2, label: 'Frewin Ct', content: <div>{/*Archived Content*/}</div> }
-//   ]);
-//   const [activeTab, setActiveTab] = useState(1);
-
-//   const [countries, setCountries] = useState([]);
-//   const [states, setStates] = useState([]);
-//   const [selectedCountry, setSelectedCountry] = useState(null);
-//   const [selectedState, setSelectedState] = useState(null);
-//   const [popupVisibleV, setPopupVisibleV] = useState(false);
-//   const [popupChildrenV, setPopupChildrenV] = useState(null);
-//   const [popupVisibleW, setPopupVisibleW] = useState(false);
-//   const [popupChildrenW, setPopupChildrenW] = useState(null);
-//   const [popupVisible, setPopupVisible] = useState(false);
-//   const [popupChildren, setPopupChildren] = useState(null);
-
-//   // Fetch countries from CountriesNow API
-//   useEffect(() => {
-//     fetchCountries();
-//   }, []);
-
-
-//   const fetchCountries = () => {
-//     fetch('https://countriesnow.space/api/v0.1/countries')
-//       .then((response) => response.json())
-//       .then((data) => {
-//         const countryOptions = data.data.map((country) => ({
-//           value: country.country,
-//           label: country.country,
-//         }));
-//         setCountries(countryOptions);
-//       })
-//       .catch((error) => {
-//         console.error("Error fetching countries: ", error);
-//       });
-//   };
-
-//   // Fetch states dynamically based on selected country
-//   const fetchStates = (countryName) => {
-//     console.log("Selected country name for states fetch:", countryName);
-
-//     fetch('https://countriesnow.space/api/v0.1/countries/states', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({ country: countryName }),
-//     })
-//       .then((response) => response.json())
-//       .then((data) => {
-//         console.log("Response from API for states:", data);
-//         if (data.data && Array.isArray(data.data.states)) {
-//           const stateOptions = data.data.states.map((state) => ({
-//             value: state.name,
-//             label: state.name,
-//           }));
-//           setStates(stateOptions);
-//           console.log("Processed states:", stateOptions);
-//         } else {
-//           console.error("No states found for this country.");
-//           setStates([]);
-//         }
-//       })
-//       .catch((error) => {
-//         console.error("Error fetching states: ", error);
-//         setStates([]);
-//       });
-//   };
-
-  
-//   const handleCountryChange = (selectedOption) => {
-//     console.log("Selected Country:", selectedOption); // Debugging Line
-//     setSelectedCountry(selectedOption);
-//     setSelectedState(null); // Reset state when country changes
-//     fetchStates(selectedOption.label); // Fetch states for the selected country
-//   };
-
-//   const handleStateChange = (selectedOption) => {
-//     console.log("Selected State:", selectedOption); // Debugging Line
-//     setSelectedState(selectedOption);
-//   };
-
-//   const addNewTab = () => {
-//     if (selectedCountry && selectedState) {
-//       const newKey = tabs.length + 1;
-//       const newTab = {
-//         key: newKey,
-//         label: `${selectedState.label}, ${selectedCountry.label}`,
-//         content: <div>Content for {selectedState.label}, {selectedCountry.label}</div>
-//       };
-//       setTabs([...tabs, newTab]);
-//       setActiveTab(newKey);
-//       setSelectedCountry(null);
-//       setSelectedState(null);
-//     }
-//   };
-
-//   // Function to trigger the popup and display content inside it
-//   const showPopup = () => {
-//     setPopupChildrenV(
-//       <AddNewLocation
-//         onClose={() => {
-//           setPopupVisibleV(false);
-//         }}
-//         onSiteCreated={(newSite) => {
-//           // Update sites and tabs
-//           setSites([...sites, newSite]);
-//           const newKey = tabs.length + 1;
-//           const newTab = {
-//             key: newKey,
-//             label: newSite.location || newSite.name,
-//             siteId: newSite._id,
-//           };
-//           setTabs([...tabs, newTab]);
-//           setActiveTab(newKey);
-//           setPopupVisibleV(false);
-//         }}
-//       />
-//     );
-//     setPopupVisibleV(true);
-//   };
-//   const closePopup = () => {
-//     setPopupVisibleV(false);
-//     setPopupChildrenV(null);
-//   };
-
-
-//   // Example of using the functions in a popup
-//   const popupContent = (
-//     <div>
-//       <Select
-//         value={selectedCountry}
-//         onChange={handleCountryChange}
-//         options={countries}
-//         placeholder="Select Country"
-//       />
-//       <Select
-//         value={selectedState}
-//         onChange={handleStateChange}
-//         options={states}
-//         placeholder="Select State"
-//         isDisabled={!selectedCountry}
-//       />
-      
-//     <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end', width: '100%' , paddingTop:'5%'}}>
-//       <CButton
-//         color="success"
-//         style={{color:'white'}}
-//         onClick={() => {
-//           addNewTab(); // Add tab from inside the popup
-//           closePopup(); // Close popup after adding the tab
-//         }}
-//         disabled={!selectedCountry || !selectedState}
-//       >
-//         Add Tab
-//       </CButton>
-//     </div>
-//     </div>
-//   )
-//   const [incidentReports, setIncidentReports] = useState([])
-//   const [user, setUser] = useState(null)
-//   const [loading, setLoading] = useState(true)
-
-//   useEffect(() => {
-//     // Fetch incident reports from the server
-//     if (profile) fetchIncidentReports()
-//   }, [profile])
-
-
-//   useEffect(() => {
-//     console.log("Selected Country Updated:", selectedCountry);
-//     console.log("Selected State Updated:", selectedState);
-//   }, [selectedCountry, selectedState]);
-
-//   const fetchIncidentReports = () => {
-//     const filter = {}
-//     if (profile.role !== 'admin') filter['siteId'] = profile.worksIn._id
-//     setLoading(true)
-//     new DashboardApiController().getReportsData(filter).then((res) => {
-//       if (res.message) {
-//         toast.error(res.message)
-//       } else {
-//         setIncidentReports(res)
-//       }
-//       setLoading(false)
-//     })
-//   }
-  
-
-//   if (loading)
-//     return (
-//       <>
-//         <div className="d-flex justify-content-center align-item-center">
-//           <CSpinner />
-//         </div>
-//       </>
-//     )
-
-//   return (
-//     <>
-//           <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start',padding:'20px'}}>
-//         <div className='title-bold'>Ticketing</div>
-//         <div style={{ display: 'flex', alignItems: 'right', justifyContent: 'flex-end', gap:'20px',width: '100%' }}>
-        
-//       <PageTopBarST
-//         picker={true}
-//         // startDate={startDate}
-//         // endDate={endDate}
-//         // setDateRange={setDateRange}
-//         currentPage="dashboard"
-//       />
-//       </div>
-//       </div>
-//     <div>
- 
-
-//     <CTabs activeItemKey={activeTab} onActiveTabChange={setActiveTab}>
-//       <CTabList variant="underline-border" color="success">
-//         {tabs.map((tab) => (
-//           <CTab
-//             key={tab.key}
-//             aria-controls={`tab-pane-${tab.key}`}
-//             itemKey={tab.key}
-//               className="tab-color align"
-//           >
-//             <img
-//               src={activeTab === tab.key ? location_pinIcon : location_pin_greyIcon}
-//               alt="Location Icon"
-//                 style={{ marginRight: '5px' }}
-//             />
-//             {tab.label}
-//           </CTab>
-//         ))}
-//           <CButton
-//             color="success"
-//             className="ml-3 add-loc-btn"
-//             onClick={showPopup}
-//         >
-//           <span style={{ fontSize: '30px', fontWeight: '200' }}>+</span>&nbsp;&nbsp; Add New Location
-//         </CButton>
-//       </CTabList>
-
-//       <CTabContent>
-//         {tabs.map((tab) => (
-//           <CTabPanel
-//             key={tab.key}
-//             className="py-3"
-//             aria-labelledby={`tab-pane-${tab.key}`}
-//             itemKey={tab.key}
-//           >
-//                 <EventsTab profile={profile} siteId={tab.siteId} siteIds={sites.map(s => s._id)} />
-//           </CTabPanel>
-//         ))}
-//       </CTabContent>
-//     </CTabs>
-
-    
-//     </div>
-//     {/* <CContainer fluid className='container-events'>
-//       <CRow className="events-row">
-//         {incidentReports.length === 0 && !loading && <p>No events reports found.</p>}
-//         {incidentReports.map((report) => (
-//           <CCol md={6} key={report._id} className="events-col">
-//             <CCard key={report._id} className="mb-3">
-//               <CCardBody>
-//                 <CRow>
-//                   <CCol md={3} className="card-label">
-//                     <strong>Reported By</strong>
-//                   </CCol>
-//                 </CRow>
-//               </CCardBody>
-//               <CCardFooter>
-//                 <strong>Incident Date:</strong> {new Date(report.incidentDate).toLocaleDateString()} at{' '}
-//                 {new Date(report.incidentDate).toLocaleTimeString([], {
-//                   hour: '2-digit',
-//                   minute: '2-digit',
-//                   hour12: false,
-//                 })}a
-//               </CCardFooter>
-//             </CCard>
-//           </CCol>
-//         ))}
-//       </CRow>
-//     </CContainer> */}
-
-
-//     <PopupModelBaseVenue
-//         visible={popupVisibleV}
-//         onClose={() => {
-//           setPopupVisibleV(false);
-//         }}
-// >
-//   {popupChildrenV}
-// </PopupModelBaseVenue>
-//     </>
-//   )
-  
-// }
-
-
-// const EventsTab = ({ profile, siteId, siteIds }) => {
-//   const [activeTab, setActiveTab] = useState(1); // Track the active tab
-
-//   // Prepare the query object
-//   const query = {
-//     status: 'upcoming',
-//     // If siteId is provided, use it; otherwise, use siteIds (array of all site IDs)
-//     siteId: siteId,
-//     siteIds: siteId ? undefined : siteIds,
-//   };
-
-//   return (
-//     <CTabs activeItemKey={activeTab} onActiveTabChange={setActiveTab}>
-//       <CTabList variant="underline-border" color="success" className="tab-list-events">
-//         <CTab aria-controls="all-events-pane" itemKey={1} className="tab-color-events">
-//           Upcoming Events
-//         </CTab>
-//         <CTab aria-controls="upcoming-tab-pane" itemKey={2} className="tab-color-events">
-//           Past Events
-//         </CTab>
-//       </CTabList>
-//       <CTabContent>
-//         <CTabPanel className="py-3" aria-labelledby="all-events-pane" itemKey={1}>
-//         {profile ? (
-//             <AllEventsTab query={{ ...query, status: 'upcoming' }} profile={profile} />
-//               ) : (
-//             <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
-//                 <CSpinner color="primary" /> 
-//                 </div>
-//               )}
-//         </CTabPanel>
-//         <CTabPanel className="py-3" aria-labelledby="upcoming-tab-pane" itemKey={2}>
-//             {profile ? (
-//             <PastEventsTab query={{ ...query, status: 'completed' }} profile={profile} />
-//                   ) : (
-//             <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
-//                     <CSpinner color="primary" /> 
-//                     </div>
-//                   )}
-//         </CTabPanel>
-//       </CTabContent>
-//     </CTabs>
-//   );
-// };
-
-
-
-// const AllEventsTab = ({ query, profile }) => {
-//   const [eventsList, setEventsList] = useState([]);
-//   const [popupVisibleW, setPopupVisibleW] = useState(false);
-//   const [popupChildrenW, setPopupChildrenW] = useState(null);
-//   const [isToggled, setIsToggled] = useState(true);
-
-  
-//   const handleToggle = (index, type) => {
-//     const updatedToggles = [...toggles];
-//     updatedToggles[index][type] = !updatedToggles[index][type];
-//     setToggles(updatedToggles);
-//   };
-
-
-//   const loadEvents = () => {
-//     // API call
-//     new VenuApiController().getAllEvents(query).then((res) => {
-//       if (res.message) {
-//         console.log("None")
-//         // toast.error(res.message);
-//       } else {
-//         setEventsList(res);
-//       }
-//     });
-//   };
-
-//   useEffect(() => {
-//     loadEvents();
-//   }, [query]);
-
-//   return (
-//     <>
-//       {eventsList.length === 0 ? (
-//         <div style={{justifyContent:'center',alignContent:'center',display:'flex'}}>
-       
-//        <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" width="60%"/> 
-//        </div>
-//       ) : (
-//         eventsList.map((event, index) => (
-//         <CContainer fluid className="container-events" key={index} >
-//           <CRow className="events-row" >
-//             <CCol md={6} className="events-col">
-//               <CCard className="mb-3">
-//                 <CCardBody className='card-body-event'>
-//                   <CRow>
-//                     <CCol md={3} className="card-label" style={{width:'100%'}}>
-//                     <div style={{width:'100%', height:'450%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'}}>
-//                       <strong style={{color:'#4E4E4E'}}>Event Name</strong> 
-//                       <div style={{ display: 'flex', justifyContent: 'space-between' ,width:'100%'}}>
-//                       <strong className="reported-by-text">{event.name}</strong> 
-//                       <label className="toggle-container">
-//                         <input
-//                           type="checkbox"
-//                           checked={isToggled}
-//                           onChange={handleToggle}
-//                           className="toggle-input"
-//                         />
-//                         <span className="toggle-slider"></span>
-//                       </label> 
-                      
-//                       </div>
-//                       </div>
-//                     </CCol>
-//                   </CRow>
-//                 </CCardBody>
-//                 <CCardFooter className="card-footer"> {/* Added class for custom styles */}
-//                   <div style={{ padding:'3% 0px'}}>
-//                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-//                       <span className='footer-label'>Date</span>
-//                       <span className='footer-content'>{new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
-//                     </div>
-//                     {event.tickets.map((ticket, ticketIndex) => (
-//                       <div key={ticketIndex}>
-//                         <div className='footer-space'>
-//                           <span className='footer-label'>Price</span>
-//                           <span className='footer-content'>£{parseFloat(ticket.price).toFixed(2)}</span>
-//                         </div>
-//                         <div className='footer-space'>
-//                           <span className='footer-label'><img src={opening_timeIcon} style={{ height: '13px', width: '13px' }} /> Opening Time</span>
-//                           <span className='footer-content'>{event.startTime} - {event.endTime}</span>
-//                         </div>
-//                         <div className='footer-space'>
-//                           <span className='footer-label'><img src={last_entryIcon} style={{ height: '13px', width: '13px' }} /> Last Entry</span>
-//                           <span className='footer-content'>{/* Last entry data here */}</span>
-//                         </div>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </CCardFooter>
-//               </CCard>
-//             </CCol>
-//           </CRow>
-//         </CContainer>
-        
-
-        
-//         ))
-//       )}
-
-// <div className='add-events-btn' >
-//       <CButton
-//         color="success text-white"
-//         siteId={profile?.worksIn?._id}
-//         onClick={() => {
-//           setPopupChildrenW(<AddTicketing siteId={profile?.worksIn?._id} />);
-//           setPopupVisibleW(true);
-//         }}
-
-//         style={{
-//           display: 'flex',
-//           alignItems: 'center',
-//           justifyContent: 'center',
-//           textAlign: 'center',
-//           borderRadius: '15px',
-//           padding: '0px 20px',
-//           backgroundColor: 'black',
-//           border: 'none',
-//           height: '43px',
-//         }}
-//       >
-//         Add Ticketing
-//         <span style={{ fontSize: '2rem', marginLeft: '5px', fontWeight: '200' }}>+</span>
-//       </CButton>
-//     </div>
-
-//     <PopupModelBaseWidth
-//         visible={popupVisibleW}
-//         onClose={() => {
-//           setPopupVisibleW(false)
-//         }}
-//         title="Add Ticketing"
-//         children={popupChildrenW}
-//       />
-//     </>
-    
-//   );
-  
-// };
-
-// const PastEventsTab = ({ query, event, onProceed }) => {
-//   const [eventsList, setEventsList] = React.useState([]);
-
-//   const loadEvents = () => {
-//     // API call
-//     new VenuApiController().getAllEvents(query).then((res) => {
-//       if (res.message) {
-//         toast.error(res.message);
-//       } else {
-//         setEventsList(res);
-//       }
-//     });
-//   };
-
-//   useEffect(() => {
-//     loadEvents();
-//   }, [query]);
-
-//   return (
-//     <>
-//       {eventsList.length === 0 ? (
-//         <div style={{ justifyContent: 'center', alignContent: 'center', display: 'flex' }}>
-//           <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" width="60%" />
-//         </div>
-//       ) : (
-//         <div className="table-responsive">
-//           <CTable className="order-table" style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
-//             <CTableHead>
-//                 <CTableRow>
-//                 <CTableHeaderCell className="table-header-cell" scope="col">Event Name</CTableHeaderCell>
-//                 <CTableHeaderCell className="table-header-cell" scope="col">Date</CTableHeaderCell>
-//                 <CTableHeaderCell className="table-header-cell" scope="col">Opening Time</CTableHeaderCell>
-//                 <CTableHeaderCell className="table-header-cell" scope="col">Last Entry</CTableHeaderCell>
-//                 <CTableHeaderCell className="table-header-cell" scope="col">Price</CTableHeaderCell>
-//                 </CTableRow>
-//               </CTableHead>
-//               <CTableBody>
-//               {eventsList.map((event, index) => (
-//                         <CTableRow key={index}>
-//                           <CTableDataCell>{event.name}</CTableDataCell>
-//                           <CTableDataCell>
-//                             {`${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' })} ${new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}`}
-//                           </CTableDataCell>
-//                   <CTableDataCell>{event.startTime} - {event.endTime}</CTableDataCell>
-//                   <CTableDataCell>{/* Last entry data here */}</CTableDataCell>
-//                         {event.tickets.map((ticket, ticketIndex) => (
-//                     <CTableDataCell key={ticketIndex}>£{parseFloat(ticket.price).toFixed(2)}</CTableDataCell>
-//                         ))}
-//                         </CTableRow>
-//               ))}
-//               </CTableBody>
-//             </CTable>
-//           </div>
-//       )}
-//     </>
-//   );
-// };
-
-
-
-// const AddTicketing = ({ siteId ,profile}) => {
-//   const [selectedImage, setSelectedImage] = useState(null); // State for the selected image
-//   const fileInputRef = useRef(null); 
-//   const [selectedImages, setSelectedImages] = useState({});
-//   const [popupVisible, setPopupVisible] = React.useState(false);
-//   const [popupChildren, setPopupChildren] = React.useState(null);
-//   const [popupTitle, setPopupTitle] = useState('');
-
-//   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-//   const fileInputRefs = useRef(days.map(() => React.createRef()));
-
-//   const [toggles, setToggles] = useState(
-//     days.map(() => ({ status: true, limitQuantity: false })) // Initial state for toggles
-//   );
-
-//   const handleButtonClick = (index) => {
-//     // If an image is already selected, reset it
-//     if (selectedImages[index]) {
-//       const updatedImages = { ...selectedImages };
-//       delete updatedImages[index]; // Delete the selected image for this row
-//       setSelectedImages(updatedImages);
-//     } else {
-//       fileInputRefs.current[index].current.click(); // Trigger click on the hidden file input for this row
-//     }
-//   };
-
-  
-//   const handleToggle = (index, type) => {
-//     const updatedToggles = [...toggles];
-//     updatedToggles[index][type] = !updatedToggles[index][type];
-//     setToggles(updatedToggles);
-//   };
-
-
-//   const handleFileChange = (event, index) => {
-//     const file = event.target.files[0];
-//     if (file) {
-//       const imageUrl = URL.createObjectURL(file); // Create a URL for the selected image
-//       setSelectedImages((prevImages) => ({
-//         ...prevImages,
-//         [index]: imageUrl, // Update the state with the selected image URL for this row
-//       }));
-//       console.log(`Selected file: ${file.name}`);
-//     }
-//   };
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//   };
-
-//   return (
-//     <>
-//       <div className="table-responsive">
-//         <CTable className="order-table" style={{ border: '1px solid #ddd', borderRadius: '8px' }}>
-//           <CTableHead>
-//             <CTableRow>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Day</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Status</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Opening Times</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Price</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Last Entry Time</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Event Name</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Limit Quantity</CTableHeaderCell>
-//               <CTableHeaderCell className='table-header-cell addskp' scope="col">Event Image</CTableHeaderCell>
-//             </CTableRow>
-//           </CTableHead>
-//           <CTableBody>
-//             {days.map((day, index) => (
-//               <CTableRow key={index}>
-//                 <CTableDataCell>{day}</CTableDataCell>
-//                 <CTableDataCell>
-//                   <label className="toggle-container">
-//                     <input
-//                       type="checkbox"
-//                       checked={toggles[index].status}
-//                       onChange={() => handleToggle(index, 'status')}
-//                       className="toggle-input"
-//                     />
-//                     <span className="toggle-slider"></span>
-//                   </label>
-//                 </CTableDataCell>
-//                 <CTableDataCell>hello</CTableDataCell>
-//                 <CTableDataCell>hello</CTableDataCell>
-//                 <CTableDataCell>hello</CTableDataCell>
-//                 <CTableDataCell>hello</CTableDataCell>
-//                 <CTableDataCell>
-//                   <label className="toggle-container">
-//                     <input
-//                       type="checkbox"
-//                       checked={toggles[index].limitQuantity}
-//                       onChange={() => handleToggle(index, 'limitQuantity')}
-//                       className="toggle-input"
-//                     />
-//                     <span className="toggle-slider"></span>
-//                   </label>
-//                   {toggles[index].limitQuantity && (
-//                     <CButton size="sm" style={{ marginLeft: '5px', backgroundColor: 'transparent' }}
-//                     siteId={profile?.worksIn?._id}
-//                     onClick={() => {
-//                       setPopupTitle('Enter Quantity');
-//                       setPopupChildren(<EnterQuantity siteId={profile?.worksIn?._id} />);
-//                       setPopupVisible(true);
-//                     }}
-//                     >
-//                       <img src={editIcon} style={{ width: '15px', height: '15px' }} />
-//                     </CButton>
-//                   )}
-//                 </CTableDataCell>
-//                 <CTableDataCell>
-//                 {selectedImages[index] ? ( // Conditional rendering
-//                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-//                       <img 
-//                         src={selectedImages[index]} 
-//                         alt="Selected" 
-//                         style={{ 
-//                           width: 'auto', 
-//                           height: '50px', 
-//                           objectFit: 'cover', 
-//                           border: '5px solid #EDEDEE', 
-//                           borderRadius: '10px',
-//                         }} 
-//                       />
-//                       <CButton size="l" style={{ backgroundColor: '#E31B54' }} onClick={() => handleButtonClick(index)}>
-//                         <img 
-//                           src={deleteIcon} 
-//                           alt="Delete file" 
-//                           style={{ width: '15px', height: '15px' }} 
-//                         />
-//                       </CButton>
-//                     </div>
-//                   ) : (
-//                     <>
-//                       <CButton size="l" style={{ backgroundColor: '#EDEDEE' }} onClick={() => handleButtonClick(index)}>
-//                         <img 
-//                           src={chosen_fileIcon} 
-//                           alt="Choose file" 
-//                           style={{ width: '15px', height: '15px' }} 
-//                         />
-//                       </CButton>
-//                       {/* Hidden file input */}
-//                       <input 
-//                         type="file" 
-//                         ref={fileInputRefs.current[index]} 
-//                         onChange={(event) => handleFileChange(event, index)} 
-//                         style={{ display: 'none' }} // Hide the file input
-//                       />
-//                     </>
-//                   )}
-//                 </CTableDataCell>
-//               </CTableRow>
-//             ))}
-//           </CTableBody>
-//         </CTable>
-//         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: '25px' }}>
-//           <CButton
-//             color="success text-white"
-//             style={{
-//               flex: 1,
-//               marginRight: '5px',
-//               display: 'flex',
-//               alignItems: 'center',
-//               justifyContent: 'center',
-//               textAlign: 'center',
-//               borderRadius: '15px',
-//               padding: '0px 20px',
-//               backgroundColor: 'black',
-//               border: 'none',
-//               height: '43px',
-//             }}
-//             onClick={() => {
-//               setPopupTitle('Add Single Event Ticket');
-//               setPopupChildren(<AddSESkip siteId={profile?.worksIn?._id} />);
-//               setPopupVisible(true);
-//             }}
-//           >
-//             Add Single Event
-//           </CButton>
-//           <CButton
-//             color="success text-white"
-//             style={{
-//               flex: 1,
-//               marginLeft: '5px',
-//               display: 'flex',
-//               alignItems: 'center',
-//               justifyContent: 'center',
-//               textAlign: 'center',
-//               borderRadius: '15px',
-//               padding: '0px 20px',
-//               backgroundColor: '#1DB954',
-//               border: 'none',
-//               height: '43px',
-//             }}
-//             // onClick={handleSubmit} 
-//           >
-//             Save
-//           </CButton>
-//         </div>
-//       </div>
-
-//       {popupVisible && (
-//         <div className="modal-overlay" />
-//       )}
-//       <PopupModelBase
-//         visible={popupVisible}
-//         onClose={() => {
-//           setPopupVisible(false)
-//         }}
-//         title={popupTitle}
-//         children={popupChildren}
-//       />
-
-//     </>
-//   );
-// };
-
-// const EnterQuantity = () => {
-//   const [quantity, setQuantity] = useState('')
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault()
-
-//     if (!quantity) {
-//       toast.warning('Please enter quantity limit')
-//       return
-//     }
-
-//     new AuthApiController().register({ quantity }).then((res) => {
-//       if (res.message) {
-//         toast.error(res.message)
-//       } else {
-//         toast.success('Quantity saved successfully.')
-//         setQuantity('')
-//       }
-//     })
-//   }
-
-//   // Restrict non-numeric input
-//   const handleQuantityChange = (e) => {
-//     const value = e.target.value
-//     if (!isNaN(value) && value >= 0) {
-//       setQuantity(value)
-//     }
-//   }
-
-//   return (
-//     <CForm className="w-100 px-4" style={{backgroundColor:'white'}}>
-//       <div className="mb-3">
-//         <CFormInput
-//           type="number"
-//           onChange={handleQuantityChange}
-//           value={quantity}
-//           placeholder="Enter quantity limit"
-//           autoComplete="quantitylimit"
-//           size="lg"
-//           className="setting-input"
-//         />
-//       </div>
-
-//       <div style={{padding:'15px 0px'}}>
-//         <CButton color="success text-white" className='model-save-btn' onClick={handleSubmit}>
-//           Save
-//         </CButton>
-//       </div>
-//     </CForm>
-//   )
-// }
-
-
-// const AddSESkip = ({ siteId }) => {
-//   const [name, setName] = useState('');
-//   const [date, setDate] = useState('');
-//   const [price, setPrice] = useState('');
-//   const [tickets, setTickets] = useState('');
-//   const [openingTime, setOpeningTime] = useState('');
-//   const [openingEndTime, setOpeningEndTime] = useState('');
-//   const [lastEntryTime, setLastEntryTime] = useState('');
-//   const [file, setFile] = useState(null);
-//   const fileInputRef = useRef(null); 
-
-//   const handleFileChange = (e) => {
-//     setFile(e.target.files[0]);
-//   };
-
-//   const handleButtonClick = () => {
-//     fileInputRef.current.click();
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!name) {
-//       toast.warning('Please enter event name');
-//       return;
-//     }
-
-//     if (!price) {
-//       toast.warning('Please enter skip price');
-//       return;
-//     }
-
-//     if (!tickets) {
-//       toast.warning('Please enter number of tickets');
-//       return;
-//     }
-
-//     if (!openingTime || !openingEndTime) {
-//       toast.warning('Please enter valid opening times');
-//       return;
-//     }
-
-//     if (!lastEntryTime.match(/^\d{2}:\d{2}$/)) {
-//       toast.warning('Please enter valid last entry time (e.g., 03:00)');
-//       return;
-//     }
-
-//     // Further processing here
-//   };
-
-//   return (
-//     <CForm className="w-100 px-4" style={{ backgroundColor: 'white' }}>
-//       {/* Event Name */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Event Name</h3>
-//         <CFormInput
-//           onChange={(e) => setName(e.target.value)}
-//           value={name}
-//           placeholder="Enter event name"
-//           autoComplete="name"
-//           size="lg"
-//           className="setting-input"
-//         />
-//       </div>
-
-//       {/* Date */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Date</h3>
-//         <CFormSelect
-//           onChange={(e) => Date(e.target.value)}
-//           value={date}
-//           size="lg"
-//           className="setting-input custom-select-icon"
-//         >
-//           {/* <option value="employee">Employee</option>
-//           <option value="admin">Admin</option> */}
-//         </CFormSelect>
-//       </div>
-
-//       {/* Opening Times */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Opening Times</h3>
-//         <CFormInput
-//           onChange={(e) => setOpening(e.target.value)}
-//           value={openingTime}
-//           placeholder="00:00-00:00"
-//           autoComplete="00:00-00:00"
-//           size="lg"
-//           className="setting-input"
-//         />
-//       </div>
-
-//       {/* Skip Price */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Skip Price</h3>
-//         <div className="input-with-symbol">
-//           <CFormInput
-//             onChange={(e) => setPrice(e.target.value)}
-//             value={price}
-//             placeholder="Enter price"
-//             autoComplete="price"
-//             size="lg"
-//             className="setting-input-with-symbol"
-//             type="number"
-//             min="0"
-//           />
-//           <span className="symbol">£</span>
-//         </div>
-//       </div>
-
-//       {/* Number of Tickets Available */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Number of Tickets Available</h3>
-//         <CFormInput
-//           onChange={(e) => setTickets(e.target.value)}
-//           value={tickets}
-//           placeholder="Enter number of tickets"
-//           autoComplete="tickets"
-//           size="lg"
-//           className="setting-input"
-//           type="number"
-//           min="1"
-//         />
-//       </div>
-
-//       {/* Last Entry Time */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Last Entry Time</h3>
-//         <CFormInput
-//           onChange={(e) => setLastEntryTime(e.target.value)}
-//           value={lastEntryTime}
-//           placeholder="00:00"
-//           autoComplete="00:00"
-//           size="lg"
-//           className="setting-input"
-//         />
-//       </div>
-
-//       {/* File Upload */}
-//       <div className="mb-3">
-//         <h3 className="setting-label">Event Image (Optional)</h3>
-//         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '100%' }}>
-//           <input
-//             type="text"
-//             readOnly
-//             value={file ? file.name : ''}
-//             placeholder="No file chosen"
-//             className='setting-input'
-//           />
-//           <button
-//             onClick={handleButtonClick}
-//             className='setting-btn'
-//           >
-//             <img 
-//               src={chosen_fileIcon} 
-//               alt="Choose file" 
-//               className='setting-input-img'
-//             />
-//           </button>
-//         </div>
-
-//         <input
-//           type="file"
-//           ref={fileInputRef}
-//           onChange={handleFileChange}
-//           accept=".jpg,.png,.gif"
-//           style={{ display: 'none' }} // Hide the default input
-//         />
-//       </div>
-
-//       {/* Save Button */}
-//       <div style={{ padding: '15px 0px' }}>
-//         <CButton color="success text-white" className="model-save-btn" onClick={handleSubmit}>
-//           Save
-//         </CButton>
-//       </div>
-//     </CForm>
-//   );
-// };
-
-
-// export default TKPage
-
 
