@@ -97,7 +97,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
       <br />
       <div style={{ display: 'flex', alignItems: 'left', width:'100%'}}>
       {showTitle && (
-      <div className="title-bold">Dashboardss Overview</div>
+      <div className="title-bold">Dashboard Overview</div>
       )}
       <div style={{ width: '100%', display: 'flex', justifyContent: showTitle ? 'flex-end' : 'center', position: 'relative' }}>
       <PageTopBar

@@ -940,6 +940,11 @@ const AddSkipping = ({ siteId , onClose }) => {
       if (!updatedEvent.name || updatedEvent.name.trim() === '') {
         updatedEvent.name = dayName;
       }
+      const fieldNames = {
+        startTime: 'Start Time',
+        endTime: 'End Time',
+        price: 'Price',
+      };
   
       if (updatedEvent.status) {
         // Validate required fields
@@ -947,7 +952,9 @@ const AddSkipping = ({ siteId , onClose }) => {
         const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
   
         if (missingFields.length > 0) {
-          toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+          // Map the missing field names to their display names
+          const missingFieldNames = missingFields.map(field => fieldNames[field] || field);
+          toast.error(`Please fill in required fields: ${missingFieldNames.join(', ')}`);
           return;
         }
       }

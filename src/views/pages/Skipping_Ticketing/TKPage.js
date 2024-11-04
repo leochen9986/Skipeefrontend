@@ -443,7 +443,7 @@ const EventsTab = ({ profile, siteId, siteIds }) => {
       <CTabContent>
         <CTabPanel className="py-3" aria-labelledby="all-events-pane" itemKey={1}>
           {profile ? (
-            <AllEventsTab query={{ ...query, status: 'upcoming' }} profile={profile} siteId={siteId}/>
+            <AllEventsTab query={{ ...query, status: ['upcoming', 'on hold'] }} profile={profile} siteId={siteId}/>
           ) : (
             <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
               <CSpinner color="primary" />
@@ -478,10 +478,30 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
   };
 
   
-  const handleToggle = (index, type) => {
-    const updatedToggles = [...toggles];
-    updatedToggles[index][type] = !updatedToggles[index][type];
-    setToggles(updatedToggles);
+  const handleToggle = (event) => {
+    // Determine the new status
+    const newStatus = event.status === 'upcoming' ? 'on hold' : 'upcoming';
+  
+    // Make an API call to update the event status
+    new VenuApiController()
+      .updateEvent(event._id, {name:event.name, status: newStatus })
+      .then((res) => {
+        if (res && !res.message) {
+          // Update the local eventsList state to reflect the new status
+          setEventsList((prevEvents) =>
+            prevEvents.map((evt) =>
+              evt._id === event._id ? { ...evt, status: newStatus } : evt
+            )
+          );
+          toast.success('Event status updated successfully.');
+        } else {
+          toast.error('Failed to update event status.');
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating event status:', error);
+        toast.error('An error occurred while updating event status.');
+      });
   };
 
 
@@ -571,8 +591,8 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
                             <label className="toggle-container">
                               <input
                                 type="checkbox"
-                                checked={isToggled}
-                                onChange={handleToggle}
+                                checked={event.status === 'upcoming'} // Reflect the event's current status
+                                onChange={() => handleToggle(event)}
                                 className="toggle-input"
                               />
                               <span className="toggle-slider"></span>
@@ -915,13 +935,21 @@ const AddTicketing = ({ siteId,onClose }) => {
       if (!updatedEvent.name || updatedEvent.name.trim() === '') {
         updatedEvent.name = dayName;
       }
+      const fieldNames = {
+        startTime: 'Start Time',
+        endTime: 'End Time',
+        price: 'Price',
+      };
+  
       if (updatedEvent.status) {
         // Validate required fields
         const requiredFields = ['startTime', 'endTime', 'price'];
         const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
   
         if (missingFields.length > 0) {
-          toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+          // Map the missing field names to their display names
+          const missingFieldNames = missingFields.map(field => fieldNames[field] || field);
+          toast.error(`Please fill in required fields: ${missingFieldNames.join(', ')}`);
           return;
         }
       }
