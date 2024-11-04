@@ -18,7 +18,7 @@ import './login.scss'
 const Register = () => {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [organisation, setOrganisation] = useState('')
+  const [organizerName, setOrganisation] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -57,26 +57,26 @@ const Register = () => {
       name: `${firstName} ${lastName}`,
       email,
       phone,
-      organisation,
+      organizerName,
       password,
       role: 'manager',
     };
   
     // Sending join request instead of registration
     new AuthApiController()
-      .requestJoin(requestData)
-      .then((res) => {
-        if (res.message) {
-          toast.error(res.message);
-        } else {
-          toast.success('Join request submitted successfully. Please wait for approval.');
-          nav('/dashboard'); // Redirect to the dashboard or wherever after submitting join request
-        }
-      })
-      .catch((error) => {
-        console.error('Error during join request:', error);
-        toast.error('Failed to submit join request');
-      });
+    .requestJoin(requestData)
+    .then((res) => {
+      if (res.message) {
+        toast.error(res.message);
+      } else {
+        toast.success('Join request submitted successfully. Please wait for approval.');
+        nav('/dashboard');
+      }
+    })
+    .catch((error) => {
+      console.error('Error during join request:', error);
+      toast.error('Failed to submit join request');
+    });
   };
 
   const checkAuthentication = () => {
@@ -154,7 +154,7 @@ const Register = () => {
                 <h3 className="input-lbl-re">Organisation Name</h3>
                 <CFormInput
                   onChange={(e) => setOrganisation(e.target.value)}
-                  value={organisation}
+                  value={organizerName}
                   placeholder="Organisation Name"
                   autoComplete="off" // Change this if needed
                   size="lg"

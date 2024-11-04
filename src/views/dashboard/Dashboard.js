@@ -15,16 +15,25 @@ import skips_soldIcon from 'src/assets/icon_svg/skips_sold.svg';
 import total_revenueIcon from 'src/assets/icon_svg/total_revenue.svg';
 import chartIcon from 'src/assets/icon_svg/chart.svg';
 
+
 const Dashboard = ({ site,  showTitle = true  }) => {
   const nav = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [dateRange, setDateRange] = useState([null, null])
+  const today = new Date();
+  const oneWeekAgo = addDays(today, -7);
+  const [dateRange, setDateRange] = useState([oneWeekAgo, today]);
   const [dashboardData, setDashboardData] = useState({})
   const [label, setLabel] = useState([])
   const [value, setValue] = useState([])
   const [topCustomers, setTopCustomers] = useState([])
 
   const [startDate, endDate] = dateRange
+  console.log
+
+  const formatCurrency = (amount) => {
+    return `£${parseFloat(amount).toFixed(2)}`; // Ensure it's a float and format to 2 decimal places
+  }
+  
 
   const getDashboardData = (filter) => {
     setLoading(true)
@@ -57,6 +66,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
           if (res && !res.worksIn) {
             nav('/register?step=1')
           }
+          console.log(res.message);
           getDashboardData({
             startDate: format(stDate, 'dd/MM/yyyy'),
             endDate: format(enDate, 'dd/MM/yyyy'),
@@ -74,7 +84,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
   useEffect(() => {
     const today = new Date()
     const oneWeekAgo = addDays(today, -7)
-    setDateRange([today, oneWeekAgo])
+    setDateRange([oneWeekAgo, today])
   }, [nav])
 
   const colors = ['#FFD966', '#D9EAD3', '#D9D2E9', '#F4CCCC']
@@ -137,7 +147,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
                     <img src={total_revenueIcon}  width="35" height="35"/>
                     <div className="title">Total Revenue</div>
                     </div>
-                    <h3 className="value">{dashboardData.totalAmount}</h3>
+                    <h3 className="value">{formatCurrency(dashboardData.totalAmount)}</h3>
                   </div>
                 </CCol>
               </CRow>

@@ -46,7 +46,7 @@ export class AuthApiController {
   }
 
   requestJoin(data) {
-    return this.apiService.post('/users/request', data)
+    return this.apiService.post('/users/request', data);
   }
 
   viewAllRequests() {
