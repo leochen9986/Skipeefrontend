@@ -21,7 +21,9 @@ export class VenuApiController {
     return this.apiService.delete(`/sites/${id}`)
   }
 
-  
+  getSitesOwnedByMe() {
+    return this.apiService.get('/sites/owned-by-me');
+  }
 
 async getAllEvents(query) {
     let url = `/sites/events?`

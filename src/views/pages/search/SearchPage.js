@@ -49,24 +49,48 @@ const Search = () => {
   }, [])
 
   const fetchResults = async (searchTerm, siteId) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const filter = {}
+      const filter = { status: "upcoming" };
       if (searchTerm) {
-        filter['search'] = searchTerm
+        filter['search'] = searchTerm;
       }
-
       if (siteId) {
-        filter['siteId'] = siteId
+        filter['siteId'] = siteId;
       }
-      const res = await new VenuApiController().getAllEvents(filter)
-      setResults(res)
+  
+      const res = await new VenuApiController().getAllEvents(filter);
+  
+      // Get the current date and time
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert current time to minutes since midnight
+  
+      // Filter events based on `status`, `startTime`, and `endTime`
+      const filteredResults = res.filter(event => {
+        const [startHour, startMinute] = event.startTime.split(":").map(Number);
+        const [endHour, endMinute] = event.endTime.split(":").map(Number);
+  
+        // Convert start and end times to minutes since midnight
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+  
+        // Check if current time is within the event time range
+        if (endMinutes < startMinutes) {
+          // Handle overnight events (e.g., start at 22:00 and end at 02:00)
+          return currentTime >= startMinutes || currentTime <= endMinutes;
+        } else {
+          // Regular time range
+          return currentTime >= startMinutes && currentTime <= endMinutes;
+        }
+      });
+  
+      setResults(filteredResults);
     } catch (error) {
-      console.error('Error fetching results:', error)
+      console.error('Error fetching results:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -272,7 +296,8 @@ const SearchSection = () => {
   const getAllEvents = async (query) => {
     const venuApiController = new VenuApiController();
     try {
-      const response = await venuApiController.getAllEvents(query);
+      const response = await venuApiController.getAllEvents({ ...query, status: "upcoming" });
+      console.log(response);
       setEvents(response);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -283,7 +308,7 @@ const SearchSection = () => {
   useEffect(() => {
     // Call getAllEvents with the search query as soon as debouncedSearch updates
     if (debouncedSearch) {
-      getAllEvents({ search: debouncedSearch });
+      getAllEvents({ search: debouncedSearch ,status: "upcoming" });
     } else {
       setEvents([]); // Clear events if the search is empty
     }

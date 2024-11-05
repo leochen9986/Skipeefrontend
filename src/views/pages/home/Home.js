@@ -154,8 +154,31 @@ const HeroSection = () => {
   const getAllEvents = async (query) => {
     const venuApiController = new VenuApiController();
     try {
-      const response = await venuApiController.getAllEvents(query);
-      setEvents(response);
+      const response = await venuApiController.getAllEvents({ ...query, status: "upcoming" });
+      
+      // Get current time in minutes since midnight
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+
+      // Filter events based on `startTime` and `endTime`
+      const filteredEvents = response.filter(event => {
+        const [startHour, startMinute] = event.startTime.split(":").map(Number);
+        const [endHour, endMinute] = event.endTime.split(":").map(Number);
+
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+
+        // Check if the current time is within the event's time range
+        if (endMinutes < startMinutes) {
+          // Handle overnight events
+          return currentTime >= startMinutes || currentTime <= endMinutes;
+        } else {
+          // Regular time range
+          return currentTime >= startMinutes && currentTime <= endMinutes;
+        }
+      });
+
+      setEvents(filteredEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
     }

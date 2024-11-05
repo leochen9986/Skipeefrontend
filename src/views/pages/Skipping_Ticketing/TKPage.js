@@ -308,14 +308,16 @@ const TKPage = ({ site }) => {
   }
   
 
-  if (loading)
+  if (loading) {
     return (
-      <>
-        <div className="d-flex justify-content-center align-item-center">
-          <CSpinner />
-        </div>
-      </>
+      <CContainer
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: '100vh' }}
+      >
+        <CSpinner color="primary" />
+      </CContainer>
     )
+  }
 
   return (
     <>
@@ -1441,10 +1443,16 @@ const handleSaveAllSingleEvents = async () => {
 };
 
 
-  if (loading) {
-    return <CSpinner />;
-  }
-
+if (loading) {
+  return (
+    <CContainer
+      className="d-flex justify-content-center align-items-center"
+      style={{ height: '100vh' }}
+    >
+      <CSpinner color="primary" />
+    </CContainer>
+  )
+}
   return (
     <>
       <div className="table-responsive">
@@ -1622,7 +1630,7 @@ const handleSaveAllSingleEvents = async () => {
                           size="l"
                           style={{ backgroundColor: '#E31B54' }}
                           onClick={() => handleDeleteImage(dayName)}
-                          disabled={isDisabled}
+                          // disabled={isDisabled}
                         >
                           <img
                             src={deleteIcon}
@@ -1637,7 +1645,7 @@ const handleSaveAllSingleEvents = async () => {
                           size="l"
                           style={{ backgroundColor: '#EDEDEE' }}
                           onClick={() => handleButtonClick(dayName)}
-                          disabled={isDisabled}
+                          // disabled={isDisabled}
                         >
                           <img
                             src={chosen_fileIcon}
@@ -1832,7 +1840,7 @@ const handleSaveAllSingleEvents = async () => {
               size="l"
               style={{ backgroundColor: '#E31B54' }}
               onClick={() => handleDeleteSingleEventImage(index)}
-              disabled={isDisabled}
+              // disabled={isDisabled}
             >
               <img
                 src={deleteIcon}
@@ -1847,7 +1855,7 @@ const handleSaveAllSingleEvents = async () => {
               size="l"
               style={{ backgroundColor: '#EDEDEE' }}
               onClick={() => handleSingleEventButtonClick(index)}
-              disabled={isDisabled}
+              // disabled={isDisabled}
             >
               <img
                 src={chosen_fileIcon}

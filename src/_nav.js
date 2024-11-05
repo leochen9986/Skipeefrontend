@@ -55,8 +55,8 @@ const _nav = [
     name: 'Ticketing',
     to: '/ticketing',
     adminOnly: false,
-    icon: <img src={ticketingIcon}  width="20" height="20" style={{marginRight:"5%"}}/> ,
-    //icon: <CImage src={logo} height={45} /> ,
+    ticketingRequired: true, // Add this line
+    icon: <img src={ticketingIcon} width="20" height="20" style={{ marginRight: '5%' }} />,
     className: 'c-nav-link',
   },
   {

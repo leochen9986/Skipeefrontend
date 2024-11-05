@@ -325,6 +325,7 @@ const AdminAccountTab = ({ siteId }) => {
 
   useState(() => {
     new VenuApiController().getMyEmployees().then((res) => {
+      console.log(res)
       setEmployees(res)
     })
   }, [])
@@ -355,6 +356,7 @@ const AdminAccountTab = ({ siteId }) => {
               <CTableHeaderCell className='table-header-cell'>Email</CTableHeaderCell>
               <CTableHeaderCell className='table-header-cell'>Role</CTableHeaderCell>
               <CTableHeaderCell className='table-header-cell'>Last Seen</CTableHeaderCell>
+              <CTableHeaderCell className='table-header-cell'>Location</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
@@ -364,12 +366,14 @@ const AdminAccountTab = ({ siteId }) => {
                   <CTableDataCell className='table-data-cell'>{emp.name}</CTableDataCell>
                   <CTableDataCell className='table-data-cell'>{emp.email}</CTableDataCell>
                   <CTableDataCell className='table-data-cell'>{emp.role}</CTableDataCell>
+                  
                   <CTableDataCell className='table-data-cell'>
                     {(() => {
                       const [year, month, day] = emp.lastSeen.split('T')[0].split('-');
                       return `${day}/${month}/${year}`;
                     })()}
                   </CTableDataCell>
+                  <CTableDataCell className='table-data-cell'>{emp.worksIn.location}</CTableDataCell>
                 </CTableRow>
               );
             })}
@@ -377,6 +381,7 @@ const AdminAccountTab = ({ siteId }) => {
 
           <CTableFoot>
             <CTableRow>
+              <CTableHeaderCell className='table-header-cell-end'></CTableHeaderCell>
               <CTableHeaderCell className='table-header-cell-end'></CTableHeaderCell>
               <CTableHeaderCell className='table-header-cell-end'></CTableHeaderCell>
               <CTableHeaderCell className='table-header-cell-end'></CTableHeaderCell>
@@ -619,12 +624,13 @@ const PayoutTab = ({ profile }) => {
 }
 
 const AddNewEmployee = ({ siteId }) => {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState('employee')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [worksIn, setWorksIn] = useState(siteId)
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('employee');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [worksIn, setWorksIn] = useState('');
+  const [sites, setSites] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -637,6 +643,21 @@ const AddNewEmployee = ({ siteId }) => {
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   }
+
+  useEffect(() => {
+    // Fetch sites owned by current user
+    new VenuApiController().getSitesOwnedByMe().then((res) => {
+      if (res.message) {
+        toast.error(res.message);
+      } else {
+        setSites(res);
+        if (res.length > 0) {
+          // Set the default worksIn to the first site
+          setWorksIn(res[0]._id);
+        }
+      }
+    });
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -725,6 +746,22 @@ const AddNewEmployee = ({ siteId }) => {
     </div>
 
     </div>
+
+    <div className="mb-3">
+        <h3 className="setting-label">Site</h3>
+        <CFormSelect
+          onChange={(e) => setWorksIn(e.target.value)}
+          value={worksIn}
+          size="lg"
+          className="setting-input"
+        >
+          {sites.map((site) => (
+            <option key={site._id} value={site._id}>
+              {site.name}
+            </option>
+          ))}
+        </CFormSelect>
+      </div>
 
       {/* Password Field */}
       <div className="mb-3 position-relative" >

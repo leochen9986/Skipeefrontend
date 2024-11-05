@@ -96,24 +96,48 @@ const SearchCard = ({ event}) => {
   }, [])
 
   const fetchResults = async (searchTerm, siteId) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const filter = {}
+      const filter = { status: "upcoming" };
       if (searchTerm) {
-        filter['search'] = searchTerm
+        filter['search'] = searchTerm;
       }
-
       if (siteId) {
-        filter['siteId'] = siteId
+        filter['siteId'] = siteId;
       }
-      const res = await new VenuApiController().getAllEvents(filter)
-      setResults(res)
+  
+      const res = await new VenuApiController().getAllEvents(filter);
+  
+      // Get the current date and time
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert current time to minutes since midnight
+  
+      // Filter events based on `status`, `startTime`, and `endTime`
+      const filteredResults = res.filter(event => {
+        const [startHour, startMinute] = event.startTime.split(":").map(Number);
+        const [endHour, endMinute] = event.endTime.split(":").map(Number);
+  
+        // Convert start and end times to minutes since midnight
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+  
+        // Check if current time is within the event time range
+        if (endMinutes < startMinutes) {
+          // Handle overnight events (e.g., start at 22:00 and end at 02:00)
+          return currentTime >= startMinutes || currentTime <= endMinutes;
+        } else {
+          // Regular time range
+          return currentTime >= startMinutes && currentTime <= endMinutes;
+        }
+      });
+  
+      setResults(filteredResults);
     } catch (error) {
-      console.error('Error fetching results:', error)
+      console.error('Error fetching results:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
 
   const handleProceed = (selectedTicketId, index) => {
@@ -159,7 +183,7 @@ const SearchCard = ({ event}) => {
                   <CCardImage
                     src={event?.image}
                     className="rounded-top"
-                    style={{ width: '30%', height: '150px', objectFit: 'fill' }}
+                    style={{ width: '30%', height: '150px', objectFit: 'cover' }}
                   />
 
                   <div
@@ -183,9 +207,9 @@ const SearchCard = ({ event}) => {
               </CCardBody>
               <CCardFooter className="d-flex flex-column flex-md-row justify-content-between align-items-center width-mobile">
                 <p className="mb-2 mb-md-0" style={{ marginRight: 'auto' }}>
-                  <img src={location_pin_greyIcon} alt="Location Pin" /> {event.location}
+                  <img src={location_pin_greyIcon} alt="Location Pin" /> {event.site.location}
                 </p>
-                <div className="d-flex flex-column flex-md-row flex-wrap width-mobile">
+                <div className="d-flex flex-column flex-md-row flex-wrap width-mobile" style={{ gap: '10px' }}> {/* Add gap here */}
                   <div className="d-flex justify-content-between w-100 mb-2 mb-md-0">
                     <CButton
                       className="custom-button-analytics"
@@ -199,10 +223,9 @@ const SearchCard = ({ event}) => {
                     >
                       View Details
                     </CButton>
-                    <CButton className="custom-button-settings" color="success" onClick={() => handleBookNow(event, index)}>
+                    <CButton className="custom-button-settings" color="success" onClick={() => handleBookNow(event, index)} style={{ marginLeft: '10px' }}> {/* Adjust margin here */}
                       Book Now
                     </CButton>
-
                   </div>
                 </div>
               </CCardFooter>

@@ -169,7 +169,7 @@ const UserHeader = ({
                   onMouseLeave={(e) => (e.target.style.backgroundColor = '#1DB954')}
                   className="manager-button"
                 >
-                  Manager Portal
+                  Manage Portal
                 </CButton>
               </div>
             </div>

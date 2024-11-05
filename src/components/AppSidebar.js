@@ -41,6 +41,24 @@ const AppSidebar = () => {
       })
   }
 
+  const getFilteredNavigation = () => {
+    if (!profile) return [];
+  
+    return navigation.filter((navItem) => {
+      // If the nav item requires ticketing, check if the user's site has ticketing enabled
+      if (navItem.ticketingRequired) {
+        console.log(profile.worksIn);
+        return profile.worksIn && profile.worksIn.ticketing === true;
+      }
+      // If the nav item is admin-only, check if the user is an admin
+      if (navItem.adminOnly) {
+        return profile.role === 'admin';
+      }
+      // Include all other nav items
+      return true;
+    });
+  };
+
   useEffect(() => {
     if (
       localStorage.getItem('skipee_access_token') !== null &&
@@ -75,7 +93,7 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader> */}
-      <AppSidebarNav items={navigation} profile={profile}/>
+      <AppSidebarNav items={getFilteredNavigation()} profile={profile} />
       {/* <CSidebarFooter style={{ background: '#1b9e3e' }} className="border-top d-none d-lg-flex">
         <CSidebarToggler
           onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
