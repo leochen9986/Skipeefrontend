@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import { VenuApiController } from '../../../api/VenuApiController';
 import SingleVenueItem from './items/VenueItemCard';
 import { AuthApiController } from '../../../api/AuthApiController';
+import ReactPaginate from 'react-paginate';
 
 const ListVenues = () => {
   const [sites, setSites] = useState([]);
@@ -22,8 +23,50 @@ const ListVenues = () => {
   const [profile, setProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // State for search input
   const [activeTab, setActiveTab] = useState('1'); // Use strings for itemKey
+  const [users, setUsers] = useState([]); // State to hold users for the dropdown
+  const [selectedUser, setSelectedUser] = useState(''); // State for selected user
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  const [totalPages, setTotalPages] = useState(1);
+
+  const getPaginatedSites = async (ownerId) => {
+    try {
+      const res = await new VenuApiController().getPaginatedSites(
+        ownerId,
+        currentPage,
+        itemsPerPage,
+        searchQuery
+      );
+      setSites(res.sites);
+      setTotalPages(res.totalPages);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message);
+    }
+  };
+
+  const getPaginatedArchivedSites = async (ownerId) => {
+    try {
+      const res = await new VenuApiController().getPaginatedArchivedSites(
+        ownerId,
+        currentPage,
+        itemsPerPage,
+        searchQuery
+      );
+      setArchivedSites(res.sites);
+      setTotalPages(res.totalPages);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message);
+    }
+  };
+
 
   useEffect(() => {
+    getUsers();
+
     new AuthApiController().getProfile().then((res) => {
       if (res.message) {
         toast.error(res.message);
@@ -37,41 +80,56 @@ const ListVenues = () => {
     });
   }, []);
 
-  const getAllSites = async () => {
-    new VenuApiController()
-      .getAllSites()
-      .then((res) => {
-        setSites(res);
-      })
-      .catch((err) => {
-        console.log(err);
-        toast.error(err.response.data.message);
-      });
+  const getUsers = async () => {
+    try {
+      const response = await new AuthApiController().getAllUsers();
+      
+      setUsers(response);
+    } catch (err) {
+      console.log(err);
+      toast.error('Failed to fetch users');
+    }
+  };
+
+
+  const getAllSites = async (userId) => {
+    try {
+      const res = await new VenuApiController().getAllSites(userId);
+      setSites(res);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message);
+    }
   };
 
   // Fetch archived sites
-  const getArchivedSites = async () => {
-    console.log('Fetching archived sites...');
-    new VenuApiController()
-      .getArchivedSites()
-      .then((res) => {
-        console.log('Archived sites fetched:', res);
-        setArchivedSites(res);
-      })
-      .catch((err) => {
-        console.log('Error fetching archived sites:', err);
-        toast.error(err.response.data.message);
-      });
+  const getArchivedSites = async (userId) => {
+    try {
+      const res = await new VenuApiController().getArchivedSites(userId);
+      setArchivedSites(res);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message);
+    }
   };
 
+useEffect(() => {
+  if (activeTab === '1') {
+    getPaginatedSites(selectedUser);
+    getPaginatedArchivedSites(selectedUser);
+  } else if (activeTab === '2') {
+    getPaginatedArchivedSites(selectedUser);
+  }
+}, [activeTab, selectedUser, currentPage, searchQuery]);
+
   useEffect(() => {
-    console.log('Active tab changed to', activeTab);
-    if (activeTab === '1') {
-      getAllSites(); // Load active sites
-    } else if (activeTab === '2') {
-      getArchivedSites(); // Load archived sites
-    }
-  }, [activeTab]);
+    setCurrentPage(1);
+  }, [selectedUser, searchQuery]);
+
+  const handlePageClick = ({ selected }) => {
+    setCurrentPage(selected + 1);
+  };
+
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -83,9 +141,9 @@ const ListVenues = () => {
     site.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredArchivedSites = archivedSites.filter((site) =>
-    site.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredArchivedSites = archivedSites.filter((site) =>
+  //   site.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
 
   return (
     <div>
@@ -114,6 +172,29 @@ const ListVenues = () => {
               className="input-comp custom-search-icon"
             />
           </div>
+            {/* Filter Dropdown */}
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              style={{
+                backgroundColor: '#EDEDEE',
+                border: 'none',
+                borderRadius: '50px',
+                color: '#909094',
+                paddingLeft: '15px',
+                height: '40px',
+                fontSize: '15px',
+                fontWeight: '500',
+              }}
+            >
+              <option value="">All Users</option>
+              {users.map((user) => (
+                <option key={user._id} value={user._id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+
         </div>
       </div>
       <div className="py-5 mb-5 paper">
@@ -132,16 +213,45 @@ const ListVenues = () => {
               Archived
             </CTab>
           </CTabList>
+          
           <CTabContent>
             <CTabPanel className="py-3" itemKey="1">
-              <ActiveTab sites={filteredSites} profile={profile} /> {/* Pass filtered sites */}
+              <ActiveTab sites={sites} profile={profile} />
             </CTabPanel>
             <CTabPanel className="py-3" itemKey="2">
-              <ArchivedTab sites={filteredArchivedSites} profile={profile} /> {/* Archived sites */}
+              <ArchivedTab sites={archivedSites} profile={profile} />
             </CTabPanel>
           </CTabContent>
         </CTabs>
       </div>
+
+            {/* Pagination component at the bottom before the footer */}
+            {sites.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <ReactPaginate
+            previousLabel={'Previous'}
+            nextLabel={'Next'}
+            breakLabel={'...'}
+            pageCount={totalPages}
+            marginPagesDisplayed={2}
+            pageRangeDisplayed={5}
+            onPageChange={handlePageClick}
+            containerClassName={'pagination'}
+            activeClassName={'active'}
+            previousClassName={'page-item'}
+            nextClassName={'page-item'}
+            pageClassName={'page-item'}
+            breakClassName={'page-item'}
+            previousLinkClassName={'page-link'}
+            nextLinkClassName={'page-link'}
+            pageLinkClassName={'page-link'}
+            breakLinkClassName={'page-link'}
+            disabledClassName={'disabled'}
+            forcePage={currentPage - 1}
+          />
+        </div>
+      )}
+      
     </div>
   );
 };

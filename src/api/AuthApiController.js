@@ -19,6 +19,10 @@ export class AuthApiController {
     }
   }
 
+  getAllUsers() {
+    return this.apiService.get('/auth/users');
+  }
+
   async logout() {
     try {
       localStorage.removeItem('skipee_access_token')

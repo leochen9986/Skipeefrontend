@@ -9,14 +9,53 @@ export class VenuApiController {
     return this.apiService.post('/sites', data)
   }
 
-  getAllSites() {
-    return this.apiService.get('/sites'); // Assuming active sites by default
+  getAllSites(ownerId) {
+    const url = ownerId ? `/sites?ownerId=${ownerId}` : '/sites';
+    return this.apiService.get(url);
   }
 
-  // Method to fetch archived sites
-  getArchivedSites() {
-    return this.apiService.get('/sites?archived=true'); // Filter to get archived sites
+  getPaginatedSites(ownerId, page = 1, limit = 6, search = '') {
+    let url = `/sites/paginated?page=${page}&limit=${limit}`;
+
+    if (ownerId) {
+      url += `&ownerId=${ownerId}`;
+    }
+
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+
+    // Add other filters if needed (e.g., archived, skipping, ticketing)
+
+    return this.apiService.get(url);
   }
+
+    // Add this method
+    getPaginatedArchivedSites(ownerId, page = 1, limit = 6, search = '') {
+      let url = `/sites/paginated?archived=true&page=${page}&limit=${limit}`;
+  
+      if (ownerId) {
+        url += `&ownerId=${ownerId}`;
+      }
+  
+      if (search) {
+        url += `&search=${encodeURIComponent(search)}`;
+      }
+  
+      return this.apiService.get(url);
+    }
+    
+  
+  // Method to fetch archived sites
+  getArchivedSites(ownerId) {
+    const url = ownerId ? `/sites?archived=true&ownerId=${ownerId}` : '/sites?archived=true';
+    return this.apiService.get(url);
+  }
+
+  archiveSite(siteId) {
+    return this.apiService.put(`/sites/${siteId}/archive`);
+  }
+  
   deleteSite(id) {
     return this.apiService.delete(`/sites/${id}`)
   }
