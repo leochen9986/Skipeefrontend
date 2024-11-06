@@ -768,6 +768,7 @@ const AddTicketing = ({ siteId,onClose }) => {
   const [popupTitle, setPopupTitle] = useState('');
   const fileInputRefs = useRef({});
   const [singleEvents, setSingleEvents] = useState([]);
+  const [isSaving, setIsSaving] = useState(false); // Track save status
 
   // Adjusted daysOfWeek array
   const daysOfWeek = [
@@ -879,14 +880,41 @@ const AddTicketing = ({ siteId,onClose }) => {
   }, [siteId]);
 
   const handleInputChange = (dayName, field, value) => {
-    setEventData((prevData) => ({
-      ...prevData,
-      [dayName]: {
+    const timeToDate = (timeStr, nextDay = false) => {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      const date = new Date();
+      date.setHours(hours, minutes, 0, 0);
+      if (nextDay) date.setDate(date.getDate() + 1); // Move to next day if required
+      return date;
+    };
+  
+    setEventData((prevData) => {
+      const updatedEventData = {
         ...prevData[dayName],
         [field]: value,
-      },
-    }));
+      };
+  
+      if (updatedEventData.startTime && updatedEventData.endTime && updatedEventData.lastEntryTime) {
+        const startTime = timeToDate(updatedEventData.startTime);
+        const endTime = timeToDate(updatedEventData.endTime, startTime > timeToDate(updatedEventData.endTime));
+        const lastEntryTime = timeToDate(updatedEventData.lastEntryTime);
+  
+        const isLastEntryValid = startTime <= lastEntryTime && lastEntryTime <= endTime ||
+                                 (startTime > endTime && (lastEntryTime >= startTime || lastEntryTime <= endTime));
+        
+        if (!isLastEntryValid) {
+          toast.error("Last Entry Time must be between Start Time and End Time.");
+          updatedEventData.lastEntryTime = ''; // Reset lastEntryTime if invalid
+        }
+      }
+  
+      return {
+        ...prevData,
+        [dayName]: updatedEventData,
+      };
+    });
   };
+
   const handleToggleChange = (dayName, field, value) => {
     handleInputChange(dayName, field, value);
   
@@ -1076,10 +1104,12 @@ const AddTicketing = ({ siteId,onClose }) => {
   };
 
   const handleSaveAll = async () => {
+    setIsSaving(true); // Disable button
     for (const dayName of Object.keys(eventData)) {
       await handleSave(dayName, false);
     }
     toast.success('All changes saved successfully.');
+    setIsSaving(false);
     onClose();
   };
 
@@ -1436,10 +1466,12 @@ const getSaleEndTimeForSingleEvent = (date, startTime, endTime) => {
 };
 
 const handleSaveAllSingleEvents = async () => {
+  setIsSaving(true); // Disable button
   for (let index = 0; index < singleEvents.length; index++) {
     await handleSingleEventSave(index, false);
   }
   toast.success('All single events saved successfully.');
+  setIsSaving(false);
 };
 
 
@@ -1956,6 +1988,7 @@ if (loading) {
             await handleSaveAll();
             await handleSaveAllSingleEvents();
           }}
+          disabled={isSaving}
         >
           Save All
         </CButton>
