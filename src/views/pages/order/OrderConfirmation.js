@@ -32,25 +32,23 @@ const OrderConfirmation = () => {
 
 
   useEffect(() => {
-
     const fetchTicket = async () => {
       try {
         const response = await new TicketApiController().getTicket(ticketId)
-        console.log(response);
         setTicket(response)
         setLoading(false)
       } catch (error) {
-        toast.error('Error fetching ticket:', error)
+        toast.error('Error fetching ticket')
         setLoading(false)
       }
     }
-    
 
     const confirmTicketBooked = async () => {
       try {
-        await new TicketApiController().confirmTicketBooked(ticketId)
+        const response = await new TicketApiController().confirmTicketBooked(ticketId)
+        setTicket(response)
       } catch (error) {
-        toast.error('Error confirming ticket:', error)
+        toast.error('Error confirming ticket')
       }
     }
 
@@ -59,12 +57,7 @@ const OrderConfirmation = () => {
       confirmTicketBooked()
     } else {
       setLoading(false)
-
-      // Set a 2-second delay before navigating back
-      setTimeout(() => {
-        // Navigate back twice to skip the Stripe page
-        window.history.go(-3)
-      }, 2000)
+      // Optionally handle cancellation
     }
   }, [ticketId, isSuccess])
 

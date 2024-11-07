@@ -85,18 +85,22 @@ const OrderScreen = () => {
   };
 
   const getStatus = (isConfirmed, isScanned) => {
-    if (!isConfirmed) return 'Failed';
-    if (!isScanned) return 'Not Completed';
+    console.log(isConfirmed);
+    if (isScanned) return 'Scanned';
+    if (isConfirmed) return 'Paid';
+    if (!isConfirmed) return 'Pending';
+    if (!isScanned) return 'Not Scanned';
+    
     return 'Completed';
   };
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Completed':
+      case 'Scanned':
         return 'status-success';
-      case 'Not Completed':
+      case 'Paid':
         return 'status-warning';
-      case 'Failed':
+      case 'Pending':
         return 'status-danger';
       default:
         return '';
@@ -107,6 +111,7 @@ const OrderScreen = () => {
   const filteredAndSortedTickets = tickets
     ?.filter((order) => {
       const orderDate = new Date(order.createdAt);
+
 
       const orderName = order.name?.toLowerCase() || '';
       const eventName = order.eventTicket?.event?.name?.toLowerCase() || '';
@@ -217,6 +222,7 @@ const OrderScreen = () => {
   {filteredAndSortedTickets?.map((order) => {
     const eventTicket = order.eventTicket;
     const event = eventTicket?.event;
+    console.log(order);
 
     return (
       <CTableRow key={order.id}>
@@ -236,12 +242,14 @@ const OrderScreen = () => {
               <div className="event-location">{event?.location || 'Unknown Location'}</div>
             </div>
           </div>
-        </CTableDataCell>
+        </CTableDataCell>{}
         <CTableDataCell>£{order.amount}</CTableDataCell>
         <CTableDataCell>{eventTicket?.name || 'Unknown Ticket'}</CTableDataCell>
         <CTableDataCell>
-          <span className={`status-badge ${getStatusClass(status)}`}>{status}</span>
-        </CTableDataCell>
+        <span className={`status-badge ${getStatusClass(getStatus(order?.isConfirmed, order?.isScaned))}`}>
+          {getStatus(order?.isConfirmed, order?.isScaned)}
+        </span>
+      </CTableDataCell>
       </CTableRow>
     );
   })}

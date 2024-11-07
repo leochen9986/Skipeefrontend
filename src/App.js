@@ -94,12 +94,10 @@ const App = () => {
           <Route path="*" name="Home" element={<DefaultLayout />} />
         </Routes>
       </Suspense>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
+      <ToastContainer 
+        limit={3}  // Only 3 toasts visible at a time
+        autoClose={1000}  // Optional: auto-close after 5 seconds
+        pauseOnHover 
       />
     </HashRouter>
   )

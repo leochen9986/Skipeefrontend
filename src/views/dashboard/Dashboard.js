@@ -133,7 +133,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
                     <img src={skips_soldIcon}  width="35" height="35"/>
                     <div className="title">Skips Sold</div>
                     </div>
-                    <h3 className="value">{dashboardData.ticketCount}</h3>
+                    <h3 className="value">{dashboardData.ticketCount ?? 0}</h3>
                   </div>
                 </CCol>
                 <CCol xs={12} md={6} className="mb-3">
@@ -147,7 +147,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
                     <img src={total_revenueIcon}  width="35" height="35"/>
                     <div className="title">Total Revenue</div>
                     </div>
-                    <h3 className="value">{formatCurrency(dashboardData.totalAmount)}</h3>
+                    <h3 className="value">{formatCurrency(dashboardData.totalAmount?? 0.00)}</h3>
                   </div>
                 </CCol>
               </CRow>

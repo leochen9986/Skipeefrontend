@@ -90,31 +90,26 @@ const EventBooking = () => {
   
   
   const handleSubmit = async (e) => {
-    console.log('Initiating payment')
-    e.preventDefault()
-    const { firstName, lastName, phoneNumber, quantity } = formData
+    e.preventDefault();
+    const { firstName, lastName, phoneNumber, quantity } = formData;
     const data = {
       name: `${firstName} ${lastName}`,
       phone: phoneNumber,
       noOfUser: quantity,
       eventTicket: ticketId,
-    }
-    setLoading(true)
-    
-
+    };
+    setLoading(true);
+  
     new TicketApiController().initiateTicketBooking(data).then((res) => {
       if (res.message) {
-        toast.error(res.message)
-        //nav(`/book/${ticketId}`);
-        
+        toast.error(res.message);
+        setLoading(false);
       } else {
-        toast.success('Complete the payment to book ticket')
-        window.location.href = res.url
-        
+        // Redirect the user to Stripe Checkout
+        window.location.href = res.url;
       }
-      setLoading(false)
-    })
-  }
+    });
+  };
 
   if (loading) {
     return (
