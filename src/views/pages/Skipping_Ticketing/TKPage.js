@@ -85,7 +85,7 @@ const TKPage = ({ site }) => {
         // Create tabs data
         const tabsData = res.map((site, index) => ({
           key: index + 1, // Start from 1, since 0 is "All"
-          label: site.location || site.name,
+          label: site.name + " (" + site.location + ")" || site.name,
           siteId: site._id,
         }));
 

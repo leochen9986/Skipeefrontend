@@ -86,7 +86,7 @@ const STPage = ({ site }) => {
         // Create tabs data
         const tabsData = res.map((site, index) => ({
           key: index + 1, // Start from 1, since 0 is "All"
-          label: site.location || site.name,
+          label: site.name + " (" + site.location + ")" || site.name,
           siteId: site._id,
         }));
 
@@ -230,7 +230,7 @@ const STPage = ({ site }) => {
           const newKey = tabs.length + 1;
           const newTab = {
             key: newKey,
-            label: newSite.location || newSite.name,
+            label: newSite.name + " (" + newSite.location + ")" || newSite.name, 
             siteId: newSite._id,
           };
           setTabs([...tabs, newTab]);

@@ -96,7 +96,7 @@ const App = () => {
       </Suspense>
       <ToastContainer 
         limit={3}  // Only 3 toasts visible at a time
-        autoClose={1000}  // Optional: auto-close after 5 seconds
+        autoClose={3000}  // Optional: auto-close after 5 seconds
         pauseOnHover 
       />
     </HashRouter>

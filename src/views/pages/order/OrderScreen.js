@@ -84,13 +84,17 @@ const OrderScreen = () => {
     return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
   };
 
-  const getStatus = (isConfirmed, isScanned) => {
-    console.log(isConfirmed);
+  const getStatus = (isConfirmed, isScanned, createdAt) => {
+    const now = new Date();
+    const createdTime = new Date(createdAt);
+    const minutesSinceCreated = (now - createdTime) / (1000 * 60);
+  
     if (isScanned) return 'Scanned';
     if (isConfirmed) return 'Paid';
+    if (!isConfirmed && minutesSinceCreated > 10) return 'Cancelled';
     if (!isConfirmed) return 'Pending';
     if (!isScanned) return 'Not Scanned';
-    
+  
     return 'Completed';
   };
 
@@ -101,7 +105,9 @@ const OrderScreen = () => {
       case 'Paid':
         return 'status-warning';
       case 'Pending':
-        return 'status-danger';
+        return 'status-pending';
+      case 'Cancelled':
+        return 'status-danger';        
       default:
         return '';
     }
@@ -246,8 +252,8 @@ const OrderScreen = () => {
         <CTableDataCell>£{order.amount}</CTableDataCell>
         <CTableDataCell>{eventTicket?.name || 'Unknown Ticket'}</CTableDataCell>
         <CTableDataCell>
-        <span className={`status-badge ${getStatusClass(getStatus(order?.isConfirmed, order?.isScaned))}`}>
-          {getStatus(order?.isConfirmed, order?.isScaned)}
+        <span className={`status-badge ${getStatusClass(getStatus(order?.isConfirmed, order?.isScaned, order?.createdAt))}`}>
+          {getStatus(order?.isConfirmed, order?.isScaned, order?.createdAt)}
         </span>
       </CTableDataCell>
       </CTableRow>

@@ -52,12 +52,25 @@ const OrderConfirmation = () => {
       }
     }
 
+    const cancelTicket = async () => {
+      try {
+        await new TicketApiController().cancelTicket(ticketId);
+        toast.info('Ticket automatically canceled.');
+      } catch (error) {
+        toast.error('Error canceling ticket');
+      }
+    };
+
+    
+    
+
     if (isSuccess) {
       fetchTicket()
       confirmTicketBooked()
     } else {
       setLoading(false)
-      // Optionally handle cancellation
+      fetchTicket(); // Fetch the ticket first for the user to see its details, if needed
+      cancelTicket(); // Automatically cancel the ticket
     }
   }, [ticketId, isSuccess])
 
