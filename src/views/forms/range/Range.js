@@ -1,27 +1,35 @@
 import React from 'react'
 
 export const ViewTicketPrice = ({ amount, site }) => {
-  const calculateComission = (amount) => {
-    let comission = site?.baseCommission
-    comission += (amount * site?.percentageCommission) / 100
+  const calculateCommission = (amount) => {
+    if (!site) return 0;
 
-    return Math.max(Math.min(comission, site?.maxCommission), site?.minCommission).toPrecision(2)
-  }
+    // Calculate percentage commission per ticket
+    let percentageCommission = parseFloat(((amount * site.percentageCommission) / 100).toFixed(2));
+
+    // Ensure the commission per ticket is at least the base commission
+    let commissionPerTicket = Math.max(percentageCommission, site.baseCommission);
+
+    // Apply min and max commission boundaries
+    commissionPerTicket = Math.min(commissionPerTicket, site.maxCommission);
+    commissionPerTicket = Math.max(commissionPerTicket, site.minCommission);
+
+    return commissionPerTicket;
+  };
+
+  const commission = calculateCommission(amount);
+  const totalPrice = parseFloat(amount) + commission;
+
   return (
     <>
       <span style={{ fontSize: '24px' }}> {/* Main amount with larger font */}
-        £ <strong>{amount}</strong>
+        £ <strong>{parseFloat(amount)}</strong>
       </span>
-        {/* <br />
-        <span style={{ fontSize: '12px' }}> 
-          - £{isNaN(calculateComission(amount)) ? '0.0' : calculateComission(amount)} fees
-          <br />
-          + £{isNaN(calculateComission(amount)) ? '0.0' : calculateComission(amount)} fees
-        </span> */}
+      {commission > 0 && (
+        <span style={{ fontSize: '12px', color: 'gray', marginLeft: '8px' }}>
+          + £{commission.toFixed(2)} fees
+        </span>
+      )}
     </>
-
-  )
-  
-}
-
-
+  );
+};
