@@ -95,7 +95,7 @@ const AppHeader = ({ onToggleSidebar }) => {
         </CHeaderToggler>
       )}
         <CImage src={logo} height={45} /> 
-        <span className="manage-text">Manage Portal</span>
+        <span className="manage-text">Manager Portal</span>
         <CHeaderNav className="d-none d-md-flex"></CHeaderNav>
         <CHeaderNav className="ms-auto">
           {/* <CNavItem>
