@@ -94,7 +94,9 @@ const AppHeader = ({ onToggleSidebar }) => {
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
       )}
-        <CImage src={logo} height={45} /> 
+        <a href="/">
+          <CImage src={logo} height={45} alt="Logo" />
+        </a>
         <span className="manage-text">Manager Portal</span>
         <CHeaderNav className="d-none d-md-flex"></CHeaderNav>
         <CHeaderNav className="ms-auto">
