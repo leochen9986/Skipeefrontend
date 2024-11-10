@@ -20,13 +20,15 @@ import { sygnet } from 'src/assets/brand/sygnet'
 // sidebar nav config
 import navigation from '../_nav'
 import { AuthApiController } from '../api/AuthApiController'
+import './AppSidebar.css'
 
-const AppSidebar = () => {
+const AppSidebar = ({ isVisible }) => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
   const [profile, setProfile] = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   const getProfile = () => {
     new AuthApiController()
@@ -58,8 +60,9 @@ const AppSidebar = () => {
       return true;
     });
   };
-
+  const [sidebarWidth, setSidebarWidth] = useState('250px');
   useEffect(() => {
+
     if (
       localStorage.getItem('skipee_access_token') !== null &&
       localStorage.getItem('skipee_access_token') !== undefined &&
@@ -67,40 +70,34 @@ const AppSidebar = () => {
     ) {
       getProfile()
     }
-  }, [])
+
+    
+    const handleResize = () => {
+      setSidebarWidth(window.innerWidth <= 992 ? (isVisible ? '250px' : '0px') : '250px');
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isVisible]);
 
   return (
-    <CSidebar
+    <div
       className="border-end"
       colorScheme="light"
-      //position="fixed"
       unfoldable={unfoldable}
-      //visible={sidebarShow}
-      visible={true}
-      // onVisibleChange={(visible) => {
-      //   dispatch({ type: 'set', sidebarShow: visible })
-      // }}
+      style={{ width: sidebarWidth }} // Set the width of the sidebar dynamically
+      visible={!isMobile || sidebarShow} // Always visible when not in mobile mode
+      onVisibleChange={(visible) => {
+        if (isMobile) {
+          dispatch({ type: 'set', sidebarShow: visible }) // Dispatch when sidebar visibility changes on mobile
+        }
+      }}
     >
-      {/* <CSidebarHeader className="border-bottom">
-        <CSidebarBrand href="/#/home" className="text-center">
-          <CImage src={logo} height={82} />
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
-        </CSidebarBrand>
-        <CCloseButton
-          className="d-lg-none"
-          dark
-          onClick={() => dispatch({ type: 'set', sidebarShow: false })}
-        />
-      </CSidebarHeader> */}
       <AppSidebarNav items={getFilteredNavigation()} profile={profile} />
-      {/* <CSidebarFooter style={{ background: '#1b9e3e' }} className="border-top d-none d-lg-flex">
-        <CSidebarToggler
-          onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
-        />
-      </CSidebarFooter> */}
-    </CSidebar>
+    
+    </div>
   )
 }
-
 export default React.memo(AppSidebar)

@@ -1,15 +1,14 @@
 /* Sidebar styles */
 .cs-sidebar {
-    transition: width 0.3s ease; /* Smooth transition for opening and closing */
-  }
-  
-  .cs-sidebar.show {
-    width: 500px; /* Fixed 500px width when open */
-  }
-  
-  .cs-sidebar.hide {
-    width: 0px; /* Hide sidebar when closed */
-  }
-  
-  /* You can further style the sidebar */
-  
+  transition: width 0.3s ease; /* Smooth transition for opening and closing */
+}
+
+.cs-sidebar.show {
+  width: 500px; /* Fixed 500px width when open */
+}
+
+.cs-sidebar.hide {
+  width: 0px; /* Hide sidebar when closed */
+}
+
+/* You can further style the sidebar */
