@@ -1,41 +1,42 @@
-import React, { useEffect } from 'react'
-import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
-import { useNavigate } from 'react-router-dom'
+// DefaultLayout.js
+import React, { useEffect, useState } from 'react';
+import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index';
+import { useNavigate } from 'react-router-dom';
+import './DefaultLayout.css';
 
 const DefaultLayout = () => {
-  const nav = useNavigate()
+  const nav = useNavigate();
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+
   const checkAuthentication = async () => {
-    if (window.location.href.includes('login') || window.location.href.includes('register')) {
-      const token = localStorage.getItem('skipee_access_token')
-      if (token) {
-        nav('/dashboard')
-      }
-    } else {
-      const token = localStorage.getItem('skipee_access_token')
-      if (!token) {
-        nav('/login')
-      }
+    const token = localStorage.getItem('skipee_access_token');
+    if (!window.location.href.includes('login') && !window.location.href.includes('register') && !token) {
+      nav('/login');
+    } else if (token) {
+      nav('/dashboard');
     }
-  }
+  };
+
   useEffect(() => {
-    checkAuthentication()
-  }, [])
+    checkAuthentication();
+  }, []);
+
+  const toggleSidebarVisibility = () => {
+    setIsSidebarVisible((prevState) => !prevState);
+  };
+
   return (
-    <div>
-      
-      <div className="wrapper d-flex flex-column min-vh-100">
-        <AppHeader />
-        <div className="body d-flex flex-column justify-content-between">
-        <div className="d-flex justify-content-between">
-          <AppSidebar />
+    <div className="wrapper d-flex flex-column min-vh-100">
+      <AppHeader onToggleSidebar={toggleSidebarVisibility} /> 
+      <div className="body d-flex flex-column flex-grow-1" >
+        <div className="d-flex justify-content-between flex-grow-1">
+          <AppSidebar isVisible={isSidebarVisible} />
           <AppContent />
         </div>
       </div>
-
-        <AppFooter />
-      </div>
+      <AppFooter />
     </div>
-  )
-}
+  );
+};
 
-export default DefaultLayout
+export default DefaultLayout;

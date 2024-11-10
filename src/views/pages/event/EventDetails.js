@@ -87,14 +87,14 @@ export const EventDetailPage = () => {
             <div className="paper">
               <h4>
                 {event.name} &nbsp;{' '}
-                <PiPencilBold
+                {/* <PiPencilBold
                   className="text-primary"
                   size={20}
                   onClick={() => {
                     nav('/event/edit/' + id)
                   }}
                   style={{ cursor: 'pointer' }}
-                />
+                /> */}
               </h4>
               <br />
               <p className="subtext" style={{ marginBottom: 0 }}>
@@ -126,11 +126,11 @@ export const EventDetailPage = () => {
                       accumulator + parseInt(currentItem.availableQuantity),
                     0,
                   )}{' '}
-                /{' '}
+                {/* /{' '}
                 {event.tickets.reduce(
                   (accumulator, currentItem) => accumulator + parseInt(currentItem.totalQuantity),
                   0,
-                )}
+                )} */}
               </h4>
               <br />
             </div>
@@ -166,11 +166,11 @@ export const EventDetailPage = () => {
             <div className="paper">
               <div className="d-flex justify-content-between">
                 <h3>Event Tickets</h3>
-                <PiPlusCircleBold
+                {/* <PiPlusCircleBold
                   color="green"
                   size={30}
                   onClick={() => (window.location.href = '/#/event/create/ticket/' + event._id)}
-                />
+                /> */}
               </div>
 
               {event.tickets.map((ticket, index) => {
@@ -185,10 +185,10 @@ export const EventDetailPage = () => {
                     }}
                   >
                     <CRow>
-                      <CCol xs={12} md={4}>
+                      <CCol xs={12} md={5}>
                         <strong>{ticket.name}</strong>
                       </CCol>
-                      <CCol xs={3}>
+                      <CCol xs={4}>
                         <strong>
                           <ViewTicketPrice amount={ticket.price} site={event.site} />
                         </strong>
@@ -199,7 +199,7 @@ export const EventDetailPage = () => {
                           {ticket.totalQuantity}
                         </strong>
                       </CCol>
-                      <CCol xs={2}>
+                      {/* <CCol xs={2}>
                         <CIcon
                           onClick={() => {
                             setSelectedTicket(ticket)
@@ -233,7 +233,7 @@ export const EventDetailPage = () => {
                             setShowPopup(true)
                           }}
                         />
-                      </CCol>
+                      </CCol> */}
                     </CRow>
                   </div>
                 )
