@@ -1,3 +1,80 @@
+// import React, { useEffect, useRef, useState } from 'react';
+// import { CContainer, CHeaderNav, CNavLink, CNavItem, CImage } from '@coreui/react';
+// import CIcon from '@coreui/icons-react';
+// import { cilMenu } from '@coreui/icons';
+// import { AuthApiController } from '../api/AuthApiController';
+// import helpIcon from 'src/assets/icon_svg/help.svg';
+// import logoutIcon from 'src/assets/icon_svg/logout.svg';
+// import logo from '../assets/images/logo/logo.png';
+// import { AppHeaderDropdown } from './header';
+// import { CHeaderToggler } from '@coreui/react';
+
+// import './components.scss';
+
+// const AppHeader = ({ onToggleSidebar }) => {
+//   const headerRef = useRef();
+//   const [profile, setProfile] = useState(null);
+
+//   const getProfile = () => {
+//     new AuthApiController()
+//       .getProfile()
+//       .then((res) => setProfile(res))
+//       .catch((err) => {
+//         console.error(err.message);
+//         localStorage.removeItem('skipee_access_token');
+//         window.location.href = `${kBaseUrl}/#/login`;
+//       });
+//   };
+
+//   useEffect(() => {
+//     if (localStorage.getItem('skipee_access_token')) {
+//       getProfile();
+//     }
+//   }, []);
+
+//   return (
+//     <CContainer className="border-bottom px-4 py-3 d-flex justify-content-between align-items-center" fluid style={{ backgroundColor: "white" }}>
+//       <CHeaderToggler
+//         onClick={onToggleSidebar}
+//         style={{ marginInlineStart: '-14px', padding: '0 5%' }}
+//       >
+//         <CIcon icon={cilMenu} size="lg" />
+//       </CHeaderToggler>
+//       <CNavLink href="/" className="d-flex align-items-center logo-mobile">
+//         <CImage src={logo} height={45} />
+//       </CNavLink>
+//       <span className="manage-text">Manage Portal</span>
+
+//       <CHeaderNav className="ms-auto">
+//         <CNavItem>
+//           <CNavLink href="/#/help">
+//             <div className="icon-wrapper">
+//               <img src={helpIcon} alt="Help" width="20" height="20" />
+//             </div>
+//           </CNavLink>
+//         </CNavItem>
+//         <CNavItem className="ms-2">
+//         <CNavLink
+//             onClick={() => {
+//               new AuthApiController().logout();
+//             }}
+//           >
+//             <div className="icon-wrapper">
+//               <img src={logoutIcon} alt="Logout" width="20" height="20" />
+//             </div>
+//           </CNavLink>
+//         </CNavItem>
+//       </CHeaderNav>
+
+//       {profile && <AppHeaderDropdown profile={profile} />}
+//     </CContainer>
+//   );
+// };
+
+// export default AppHeader;
+
+//=================================================================================
+
 import React, { useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
@@ -37,13 +114,26 @@ import logoutIcon from 'src/assets/icon_svg/logout.svg';
 import './components.scss';
 import logo from '../assets/images/logo/logo.png'
 
-const AppHeader = () => {
+const AppHeader = ({ onToggleSidebar }) => {
   const headerRef = useRef()
   const [profile, setProfile] = useState(null)
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth)
+  }
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   const getProfile = () => {
     new AuthApiController()
@@ -54,7 +144,7 @@ const AppHeader = () => {
       .catch((err) => {
         toast.error(err.message)
         localStorage.removeItem('skipee_access_token')
-        window.location.href = `${kBaseUrl}/#/login`
+        window.location.href = `${kBaseUrl}/#/login`;
       })
   }
 
@@ -75,14 +165,16 @@ const AppHeader = () => {
   return (
     // <CHeader position="sticky" ref={headerRef}>
     <CContainer className="border-bottom px-4 py-3 d-flex justify-content-between align-items-center" fluid style={{backgroundColor:"white"}}>
-          <CImage src={logo} height={45} /> 
-        <span className="manage-text">Manage</span>
-        {/* <CHeaderToggler
-          onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-          style={{ marginInlineStart: '-14px' }}
+      {windowWidth <= 992 && (
+        <CHeaderToggler
+          onClick={onToggleSidebar}
+          style={{ marginInlineStart: '-14px', padding: '0 5%' }}
         >
           <CIcon icon={cilMenu} size="lg" />
-        </CHeaderToggler> */}
+        </CHeaderToggler>
+      )}
+        <CImage src={logo} height={45} /> 
+        <span className="manage-text">Manage</span>
         <CHeaderNav className="d-none d-md-flex"></CHeaderNav>
         <CHeaderNav className="ms-auto">
           {/* <CNavItem>

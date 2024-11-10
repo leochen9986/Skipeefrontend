@@ -1,0 +1,15 @@
+/* Sidebar hidden by default for smaller screens */
+.sidebar {
+    display: block; /* Make sure the sidebar is visible by default */
+  }
+  
+  @media (max-width: 992px) {
+    .sidebar {
+      display: none; /* Hide sidebar on smaller screens */
+    }
+    
+    .sidebar.visible {
+      display: block; /* Show sidebar when it's toggled in mobile view */
+    }
+  }
+  
