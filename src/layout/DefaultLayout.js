@@ -30,8 +30,12 @@ const DefaultLayout = () => {
       <AppHeader onToggleSidebar={toggleSidebarVisibility} /> 
       <div className="body d-flex flex-column flex-grow-1" >
         <div className="d-flex justify-content-between flex-grow-1">
+        <div style={{width:'250px'}}>
           <AppSidebar isVisible={isSidebarVisible} />
-          <AppContent />
+          </div>
+          <div style={{width:'100%'}}>
+          <AppContent/>
+          </div>
         </div>
       </div>
       <AppFooter />

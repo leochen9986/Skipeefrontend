@@ -13,11 +13,7 @@ import {
 import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
-
 import logo from '../assets/images/logo/logo.png'
-import { sygnet } from 'src/assets/brand/sygnet'
-
-// sidebar nav config
 import navigation from '../_nav'
 import { AuthApiController } from '../api/AuthApiController'
 import './AppSidebar.css'
@@ -29,6 +25,8 @@ const AppSidebar = ({ isVisible }) => {
 
   const [profile, setProfile] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState('250px')
+  const [sidebarMargin, setSidebarMargin] = useState('0%')
 
   const getProfile = () => {
     new AuthApiController()
@@ -41,6 +39,13 @@ const AppSidebar = ({ isVisible }) => {
         localStorage.removeItem('skipee_access_token')
         window.location.href = `${kBaseUrl}/#/home`
       })
+  }
+
+  const onNavLinkClick = () => {
+    if (isMobile) {
+      setSidebarWidth('0px')
+      setSidebarMargin('-20px')
+    }
   }
 
   const getFilteredNavigation = () => {
@@ -56,13 +61,11 @@ const AppSidebar = ({ isVisible }) => {
       if (navItem.adminOnly) {
         return profile.role === 'admin';
       }
-      // Include all other nav items
-      return true;
-    });
-  };
-  const [sidebarWidth, setSidebarWidth] = useState('250px');
-  useEffect(() => {
+      return true
+    })
+  }
 
+  useEffect(() => {
     if (
       localStorage.getItem('skipee_access_token') !== null &&
       localStorage.getItem('skipee_access_token') !== undefined &&
@@ -71,32 +74,38 @@ const AppSidebar = ({ isVisible }) => {
       getProfile()
     }
 
-    
     const handleResize = () => {
-      setSidebarWidth(window.innerWidth <= 992 ? (isVisible ? '250px' : '0px') : '250px');
-    };
+      if (window.innerWidth <= 992) {
+        setIsMobile(true)
+        setSidebarWidth(isVisible ? '250px' : '0px')
+        setSidebarMargin(isVisible ? '0%' : '-20px')
+      } else {
+        setIsMobile(false)
+        setSidebarWidth('250px')
+        setSidebarMargin('0%')
+      }
+    }
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
+    window.addEventListener('resize', handleResize)
+    handleResize()
 
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isVisible]);
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isVisible])
 
   return (
     <div
       className="border-end"
       colorScheme="light"
       unfoldable={unfoldable}
-      style={{ width: sidebarWidth }} // Set the width of the sidebar dynamically
-      visible={!isMobile || sidebarShow} // Always visible when not in mobile mode
+      style={{ width: sidebarWidth, marginLeft: sidebarMargin }} // Adjust margin and width dynamically
+      visible={!isMobile || sidebarShow}
       onVisibleChange={(visible) => {
         if (isMobile) {
-          dispatch({ type: 'set', sidebarShow: visible }) // Dispatch when sidebar visibility changes on mobile
+          dispatch({ type: 'set', sidebarShow: visible })
         }
       }}
     >
-      <AppSidebarNav items={getFilteredNavigation()} profile={profile} />
-    
+      <AppSidebarNav items={getFilteredNavigation()} profile={profile} onNavLinkClick={onNavLinkClick} />
     </div>
   )
 }

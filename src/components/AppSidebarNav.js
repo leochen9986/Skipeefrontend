@@ -5,9 +5,9 @@ import PropTypes from 'prop-types'
 import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
 
-import { CAvatar, CBadge, CNavLink, CSidebarNav } from '@coreui/react'
+import { CAvatar, CBadge, CNavLink, CSidebarNav  } from '@coreui/react'
 
-export const AppSidebarNav = ({ items, profile }) => {
+export const AppSidebarNav = ({ items, profile,onNavLinkClick }) => {
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
@@ -34,7 +34,7 @@ export const AppSidebarNav = ({ items, profile }) => {
     return (
       <Component as="div" key={index}>
         {rest.to || rest.href ? (
-          <CNavLink {...(rest.to && { as: NavLink })} {...rest}>
+          <CNavLink {...(rest.to && { as: NavLink })} {...rest} onClick={onNavLinkClick}> 
             {navLink(name, icon, badge, indent)}
           </CNavLink>
         ) : (
@@ -82,4 +82,5 @@ export const AppSidebarNav = ({ items, profile }) => {
 
 AppSidebarNav.propTypes = {
   items: PropTypes.arrayOf(PropTypes.any).isRequired,
+  onNavLinkClick: PropTypes.func.isRequired,
 }
