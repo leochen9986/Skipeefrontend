@@ -16,6 +16,7 @@ import { VenuApiController } from '../../../api/VenuApiController';
 import SingleVenueItem from './items/VenueItemCard';
 import { AuthApiController } from '../../../api/AuthApiController';
 import ReactPaginate from 'react-paginate';
+import './ListVenues.scss'
 
 const ListVenues = () => {
   const [sites, setSites] = useState([]);
@@ -271,17 +272,9 @@ const ActiveTab = ({ sites, profile }) => {
               }}>
               {sites && sites.length > 0 ? (
                 sites.map((site) => (
-                  <div
-                    key={site._id}
-                    style={{ 
-                      flex: '0 0 auto', 
-                      margin: '0', 
-                      padding: '0',
-                      width: '50%',
-                    }}
-                  >
-                    <SingleVenueItem site={site} />
-                  </div>
+                  <div key={site._id} className="venue-card">
+                  <SingleVenueItem site={site} />
+                </div>
                 ))
               ) : (
                 <div>No venues available.</div>

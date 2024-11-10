@@ -41,31 +41,54 @@
   width: 100%;
 }
 
-body, html {
-    overflow-x: hidden;
-  }
+// body, html {
+//     overflow-x: hidden;
+//   }
   
 
-  .container-events {
-    width: 95%;
-    margin-right: 4%;
-    justify-content: flex-start;
-    /* Removed display: grid; since we're using Bootstrap grid system */
+.container-events {
+  width: 100%;
+  margin: 0 auto; /* Center the container if needed */
+  padding: 0 1rem; /* Optional: Add padding for spacing */
+}
+  
+.events-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+  
+.events-col {
+  /* Default for larger screens */
+  min-width: 300px;
+  max-width: 380px;
+  margin-bottom: 1rem; /* Space between rows */
+
+  /* For mobile view */
+  @media (max-width: 768px) { /* Adjust breakpoint as needed */
+    min-width: 85vw; /* Take full width of the screen */
+    max-width: 100%; /* Take full width of the screen */
   }
   
-  .events-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; /* Adjust as needed */
-    gap: 1rem; /* Space between columns */
+}
+
+.no-event-container {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
+.no-event-container img {
+  width: 100%; /* Full width within the container */
+}
+
+@media (max-width: 768px) { /* Adjust breakpoint for mobile screens */
+  .no-event-container {
+    width: 100vw; /* Full width of the viewport on mobile */
+    padding: 0 10px; /* Optional padding for better appearance */
   }
-  
-  .events-col {
-    /* Using Bootstrap's grid system, so additional flex properties may not be necessary */
-    min-width: 300px;
-    max-width: 380px;
-    margin-bottom: 1rem; /* Space between rows */
-  }
+}
 
   .add-events-btn{
     display: flex;

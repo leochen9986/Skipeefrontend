@@ -1,0 +1,15 @@
+/* CSS for venue-card layout */
+.venue-card {
+    flex: 0 0 auto;
+    margin: 10px;
+    padding: 0;
+    width: 50%; /* Default for larger screens */
+  }
+  
+  /* Single-column layout for mobile view */
+  @media (max-width: 768px) {
+    .venue-card {
+      width: 100%; /* Full width for mobile */
+    }
+  }
+  

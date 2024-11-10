@@ -535,9 +535,9 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
   return (
     <>
       {eventsList.length === 0 ? (
-        <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
-          <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" width="60%" />
-        </div>
+        <div className="no-event-container">
+        <img src="/src/assets/images/noEventWidget.svg" alt="noEvent" />
+      </div>
       ) : (
         <CContainer fluid className="container-events">
           <CRow className="events-row">
