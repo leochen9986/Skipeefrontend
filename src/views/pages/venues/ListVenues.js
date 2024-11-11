@@ -263,18 +263,12 @@ const ActiveTab = ({ sites, profile }) => {
       <CRow xs={12}>
         <CCol>
           <CCardBody>
-            <div style={{ 
-                width: '100%', 
-                display: 'flex', 
-                justifyContent: 'flex-start', 
-                alignItems: 'flex-start', 
-                flexWrap: 'wrap', 
-              }}>
-              {sites && sites.length > 0 ? (
-                sites.map((site) => (
-                  <div key={site._id} className="venue-card">
-                  <SingleVenueItem site={site} />
-                </div>
+          <div className="venue-card-main">
+          {sites && sites.length > 0 ? (
+            sites.map((site) => (
+              <div key={site._id} className="venue-card">
+                <SingleVenueItem site={site} />
+              </div>
                 ))
               ) : (
                 <div>No venues available.</div>
@@ -294,26 +288,12 @@ const ArchivedTab = ({ sites, profile }) => {
       <CRow xs={12}>
         <CCol>
           <CCardBody>
-            <div style={{ 
-                width: '100%', 
-                display: 'flex', 
-                justifyContent: 'flex-start', 
-                alignItems: 'flex-start', 
-                flexWrap: 'wrap', 
-              }}>
-              {sites && sites.length > 0 ? (
-                sites.map((site) => (
-                  <div
-                    key={site._id}
-                    style={{ 
-                      flex: '0 0 auto', 
-                      margin: '0', 
-                      padding: '0',
-                      width: '50%',
-                    }}
-                  >
-                    <SingleVenueItem site={site} />
-                  </div>
+          <div className="venue-card-main">
+          {sites && sites.length > 0 ? (
+            sites.map((site) => (
+              <div key={site._id} className="venue-card">
+                <SingleVenueItem site={site} />
+              </div>
                 ))
               ) : (
                 <div>No archived venues available.</div>

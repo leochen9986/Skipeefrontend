@@ -84,7 +84,8 @@ const MainChart = ({ values, labels }) => {
               grid: {
                 color: getStyle('--cui-border-color-translucent'),
               },
-              max: values ? Math.max(...values) : 250,
+              max: values ? Math.max(...values)+20 : 250,
+              
               // ticks: {
               //   color: getStyle('--cui-body-color'),
               //   maxTicksLimit: values ? values.length : 5,
@@ -102,6 +103,7 @@ const MainChart = ({ values, labels }) => {
               hoverRadius: 7, 
               hoverBorderWidth: 3,
               backgroundColor: '#1DB954', 
+              z: 10,
             },
           },
         }}
