@@ -26,7 +26,7 @@ export const ViewTicketPrice = ({ amount, site }) => {
         £ <strong>{parseFloat(amount)}</strong>
       </span>
       {commission > 0 && (
-        <span style={{ fontSize: '12px', color: 'gray', marginLeft: '8px' }}>
+        <span style={{ fontSize: '12px', color: '#bfbfbf', marginLeft: '8px' }}>
           + £{commission.toFixed(2)} fees
         </span>
       )}

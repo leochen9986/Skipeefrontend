@@ -286,7 +286,7 @@ export const EventDetailView = ({ event, onProceed }) => {
           </CCol>
         </CRow>
 
-        <CCardText className="mt-3">{event.description || 'No description available.'}</CCardText>
+        <CCardText className="mt-3">{event.description || ''}</CCardText>
 
         <CListGroup flush className="mt-4">
           <CListGroupItem>
@@ -296,7 +296,7 @@ export const EventDetailView = ({ event, onProceed }) => {
             <CIcon icon={cilClock} /> Time: {event.startTime} - {event.endTime}
           </CListGroupItem>
           <CListGroupItem>
-            <CIcon icon={cilLocationPin} /> Location: {event.location}
+            <CIcon icon={cilLocationPin} /> Location: {event.site.location}
           </CListGroupItem>
           <CListGroupItem>
             <CIcon icon={cilUser} /> Minimum Age: {event.minAgeLimit}+
@@ -334,9 +334,9 @@ export const EventDetailView = ({ event, onProceed }) => {
                 <CBadge color="success">
                   <ViewTicketPrice amount={ticket.price} site={event.site} />
                 </CBadge>
-                <div>
+                {/* <div>
                   <small>{ticket.availableQuantity} available</small>
-                </div>
+                </div> */}
               </div>
             </CListGroupItem>
           ))}

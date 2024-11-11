@@ -55,6 +55,7 @@ const STPage = ({ site }) => {
   const [profile, setProfile] = useState(null)
   const [sites, setSites] = useState([]);
   const [activeSiteId, setActiveSiteId] = useState(null); // Currently selected siteId
+  
 
   useEffect(() => {
     new AuthApiController().getProfile().then((res) => {
@@ -769,6 +770,7 @@ const AddSkipping = ({ siteId , onClose }) => {
   const [popupTitle, setPopupTitle] = useState('');
   const fileInputRefs = useRef({});
   const [singleEvents, setSingleEvents] = useState([]);
+  let hasErrorOccurred = false;
 
   const [isSaving, setIsSaving] = useState(false); // Track save status
   // Adjusted daysOfWeek array
@@ -885,11 +887,10 @@ const AddSkipping = ({ siteId , onClose }) => {
   }, [siteId]);
 
   const handleInputChange = (dayName, field, value) => {
-    const timeToDate = (timeStr, nextDay = false) => {
+    const timeToDate = (timeStr, referenceDate = new Date()) => {
       const [hours, minutes] = timeStr.split(":").map(Number);
-      const date = new Date();
+      const date = new Date(referenceDate); // Use the provided date
       date.setHours(hours, minutes, 0, 0);
-      if (nextDay) date.setDate(date.getDate() + 1); // Move to next day if required
       return date;
     };
   
@@ -901,12 +902,27 @@ const AddSkipping = ({ siteId , onClose }) => {
   
       if (updatedEventData.startTime && updatedEventData.endTime && updatedEventData.lastEntryTime) {
         const startTime = timeToDate(updatedEventData.startTime);
-        const endTime = timeToDate(updatedEventData.endTime, startTime > timeToDate(updatedEventData.endTime));
-        const lastEntryTime = timeToDate(updatedEventData.lastEntryTime);
+        let endTime = timeToDate(updatedEventData.endTime, startTime);
   
-        const isLastEntryValid = startTime <= lastEntryTime && lastEntryTime <= endTime ||
-                                 (startTime > endTime && (lastEntryTime >= startTime || lastEntryTime <= endTime));
-        
+        // If endTime is earlier than startTime, it spans the next day
+        if (endTime <= startTime) {
+          endTime.setDate(endTime.getDate() + 1); // Move endTime to the next day
+        }
+  
+        let lastEntryTime = timeToDate(updatedEventData.lastEntryTime, startTime);
+  
+        // Handle lastEntryTime when the event spans midnight
+        if (lastEntryTime < startTime) {
+          lastEntryTime.setDate(lastEntryTime.getDate() + 1); // Set to next day if before startTime
+        } else if (lastEntryTime > endTime) {
+          // If lastEntryTime somehow exceeds endTime (which shouldn't normally happen), reset it
+          toast.error("Last Entry Time must be between Start Time and End Time.");
+          updatedEventData.lastEntryTime = ''; // Reset to indicate invalid input
+          return { ...prevData, [dayName]: updatedEventData }; // Exit early
+        }
+  
+        const isLastEntryValid = lastEntryTime >= startTime && lastEntryTime <= endTime;
+  
         if (!isLastEntryValid) {
           toast.error("Last Entry Time must be between Start Time and End Time.");
           updatedEventData.lastEntryTime = ''; // Reset lastEntryTime if invalid
@@ -919,7 +935,6 @@ const AddSkipping = ({ siteId , onClose }) => {
       };
     });
   };
-
 
   const handleToggleChange = (dayName, field, value) => {
     handleInputChange(dayName, field, value);
@@ -985,6 +1000,7 @@ const AddSkipping = ({ siteId , onClose }) => {
         if (missingFields.length > 0) {
           // Map the missing field names to their display names
           const missingFieldNames = missingFields.map(field => fieldNames[field] || field);
+          hasErrorOccurred = true;
           toast.error(`Please fill in required fields: ${missingFieldNames.join(', ')}`);
           return;
         }
@@ -1095,24 +1111,30 @@ const AddSkipping = ({ siteId , onClose }) => {
               },
             }));
           } else {
+            hasErrorOccurred = true;
             toast.error('Failed to create event ticket.');
           }
         } else {
+          hasErrorOccurred = true;
           toast.error('Failed to create event.');
         }
       }
     } catch (error) {
       console.error(error);
+      hasErrorOccurred = true;
       toast.error('Failed to save event.');
     }
   };
 
   const handleSaveAll = async () => {
     setIsSaving(true); // Disable button
+    hasErrorOccurred = false; // Reset the error flag
     for (const dayName of Object.keys(eventData)) {
       await handleSave(dayName, false);
     }
-    toast.success('All changes saved successfully.');
+    if (!hasErrorOccurred) {
+      toast.success('All changes saved successfully.');
+    }
     setIsSaving(false);
     onClose();
   };
@@ -1267,6 +1289,7 @@ const handleSingleEventSave = async (index, showToast = true) => {
       const missingFields = requiredFields.filter((field) => !updatedEvent[field]);
 
       if (missingFields.length > 0) {
+        hasErrorOccurred = true;
         toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
         return;
       }
@@ -1435,7 +1458,9 @@ const handleSaveAllSingleEvents = async () => {
   for (let index = 0; index < singleEvents.length; index++) {
     await handleSingleEventSave(index, false);
   }
+  if (!hasErrorOccurred) {
   toast.success('All single events saved successfully.');
+  }
   setIsSaving(false);
 };
 
