@@ -121,8 +121,6 @@ const STPage = ({ site }) => {
   // }
 
   const [tabs, setTabs] = useState([
-    { key: 1, label: 'Westbury St', content: <div>{/*Archived Content*/}</div> },
-    { key: 2, label: 'Frewin Ct', content: <div>{/*Archived Content*/}</div> }
   ]);
   const [activeTab, setActiveTab] = useState(1);
 

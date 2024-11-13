@@ -94,12 +94,13 @@ const Home = () => {
         setIsAboutInView={setIsAboutInView} // Pass the setter as a prop
         setIsContactInView={setIsContactInView} // Pass the setter as a prop
       />
-      <div id="home-section">
+      <div id="home-section"  style={{ paddingBottom: '100px'}}>
         <HeroSection />
-      </div>
         <BenefitsSection />
+      </div>
+        
       
-        <div id="about-section" style={{ paddingTop: '80px', marginTop: '-80px' }}>
+        <div id="about-section" style={{ paddingTop: '100px', marginTop: '-80px' }}>
         <AboutUsDiv />
       </div>
             

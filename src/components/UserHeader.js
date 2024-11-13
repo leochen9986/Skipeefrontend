@@ -115,7 +115,7 @@ const UserHeader = ({
                     style={{
                       fontSize: '0.9rem',
                       cursor: 'pointer',
-                      color: isHomeInView ? '#1DB954' : 'black',
+                      color: isHomeInView  && !isAboutInView  ? '#1DB954' : 'black',
                       textDecoration: 'none',
                     }}
                     className="d-flex header-btn"
