@@ -258,7 +258,7 @@ const HeroSection = () => {
                 onChange={(e) => {
                   const inputValue = e.target.value;
                   // Remove "=" characters from the input
-                  const sanitizedValue = inputValue.replace(/=/g, '');
+                  const sanitizedValue = inputValue.replace(/[^a-zA-Z0-9 ]/g, '');
                   setFilteredSuggestions([]);
                   setSearch(sanitizedValue);
                 }}

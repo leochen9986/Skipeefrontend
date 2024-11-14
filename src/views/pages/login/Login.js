@@ -124,11 +124,11 @@ const Login = () => {
                   {showPassword ? <AiFillEyeInvisible size={24} /> : <AiFillEye size={24} />}
                 </span>
               </div>
-              <div style={{ width: '100%', textAlign: 'right' }}>
+             
                 <p className="forgot-password mb-0 cursor-pointer" onClick={handleForgotPassword}>
                   Forgotten password?
                 </p>
-              </div>
+              
             </div>
 
             {/* Sign In Button */}

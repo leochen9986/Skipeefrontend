@@ -45,6 +45,9 @@
 //     overflow-x: hidden;
 //   }
   
+.pac-container {
+  z-index: 10000 !important;
+}
 
 .container-events {
   width: 100%;

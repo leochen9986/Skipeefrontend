@@ -40,10 +40,11 @@ const ResetPassword = () => {
   return (
     <div
       style={{
-        backgroundImage: `url(${loginBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
-        backgroundRepeat: 'no-repeat',
+        marginTop:"100px"
+        // backgroundImage: `url(${loginBg})`,
+        // backgroundSize: 'cover',
+        // backgroundPosition: 'center center',
+        // backgroundRepeat: 'no-repeat',
       }}
     >
       <UserHeader />

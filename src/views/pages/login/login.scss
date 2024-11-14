@@ -63,6 +63,10 @@
   text-decoration: underline;
   cursor: pointer;
   text-align: right !important;
+  position: relative;
+  z-index: 10; /* Ensure it’s on top */
+  pointer-events: auto;
+
 
   @media (max-width: 768px) {
     font-size: 12px;

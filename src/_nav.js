@@ -72,7 +72,7 @@ const _nav = [
   
   {
     component: CNavItem,
-    name: 'Incidents Reported',
+    name: 'Incident Reports',
     to: '/reports',
     adminOnly: false,
     icon: <img src={reportedIcon}  width="20" height="20" style={{marginRight:"5%"}}/> ,
