@@ -2383,7 +2383,10 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
 
   useEffect(() => {
     if (window.google && window.google.maps && locationInputRef.current) {
-      const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
+      const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current, {
+        componentRestrictions: { country: 'GB' }, // Restrict to United Kingdom
+        fields: ['formatted_address', 'geometry', 'name'],
+      });
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace();
         setVenueLocation(place.formatted_address);

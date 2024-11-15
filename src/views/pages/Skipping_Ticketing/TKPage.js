@@ -2405,15 +2405,18 @@ const AddSESkip = ({ siteId,onClose, onEventAdded }) => {
 const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('test@gmail.com');
-  const [phone, setPhone] = useState('+1234567');
+  const [phone, setPhone] = useState('+1234566');
   const [logo, setLogo] = useState(null);
   const fileInputRef = useRef(null);
+  const [venueLocation, setVenueLocation] = useState(null)
 
   // Country and State selection
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [selectedState, setSelectedState] = useState(null);
+
+  const locationInputRef = useRef(null)
 
   const uploadLogoToFirebase = async (file) => {
     try {
@@ -2428,6 +2431,17 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
   }
 
   useEffect(() => {
+    if (window.google && window.google.maps && locationInputRef.current) {
+      const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current, {
+        componentRestrictions: { country: 'GB' }, // Restrict to United Kingdom
+        fields: ['formatted_address', 'geometry', 'name'],
+      });
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        setVenueLocation(place.formatted_address);
+      });
+    }
+
     fetchCountries();
   }, []);
 
@@ -2491,7 +2505,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!name || !logo || !selectedCountry || !selectedState) {
+    if (!name || !logo || !venueLocation) {
       toast.warning('Please fill all required fields and upload a logo.');
       return;
     }
@@ -2500,7 +2514,8 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
       // Upload logo to Firebase and get URL
       const logoUrl = await uploadLogoToFirebase(logo);
 
-      const location = `${selectedState.label}, ${selectedCountry.label}`;
+      const location = venueLocation ; //`${selectedState.label}, ${selectedCountry.label}`;
+
 
       const payload = {
         name,
@@ -2509,7 +2524,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
         logo: logoUrl,
         location,
         skipping: true,  // Set default values or include fields as needed
-        ticketing: true,
+        ticketing: false,
       };
 
       const response = await new VenuApiController().createVenue(payload);
@@ -2563,7 +2578,7 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
       </div> */}
 
       {/* Country Selection */}
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <h3 className="setting-label">Country</h3>
         <Select
           value={selectedCountry}
@@ -2571,10 +2586,10 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
           options={countries}
           placeholder="Select Country"
         />
-      </div>
+      </div> */}
 
       {/* State Selection */}
-      <div className="mb-3">
+      {/* <div className="mb-3">
         <h3 className="setting-label">State</h3>
         <Select
           value={selectedState}
@@ -2583,7 +2598,19 @@ const AddNewLocation = ({ onClose, onSiteCreated }) => {
           placeholder="Select State"
           isDisabled={!selectedCountry}
         />
-      </div>
+      </div> */}
+      <div className="mb-3">
+        <h3 className="setting-label">Venue Location</h3>
+        <CFormInput
+          ref={locationInputRef}
+          onChange={(e) => setVenueLocation(e.target.value)}
+          value={venueLocation}
+          placeholder="Enter venue location"
+          autoComplete="off"
+          size="lg"
+          className="setting-input"
+        />
+      </div>      
 
       {/* Logo Upload */}
       <div className="mb-3">

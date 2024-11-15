@@ -8,7 +8,10 @@ export class VenuApiController {
   createVenue(data) {
     return this.apiService.post('/sites', data)
   }
-
+  // Add the updateVenue method
+  updateVenue(id, data) {
+    return this.apiService.put(`/sites/${id}`, data)
+  }
   getAllSites(ownerId) {
     const url = ownerId ? `/sites?ownerId=${ownerId}` : '/sites';
     return this.apiService.get(url);

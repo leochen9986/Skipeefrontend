@@ -17,6 +17,12 @@ export class VenuApiController {
     return this.apiService.delete(`/sites/${id}`)
   }
 
+
+  // Add the updateVenue method
+  updateVenue(id, data) {
+    return this.apiService.put(`/sites/${id}`, data)
+  }
+
   async getAllEvents(query) {
     let url = `/sites/events?`
     for (const key in query) {
