@@ -319,8 +319,8 @@ const SearchSection = () => {
       const uniqueSuggestions = new Set();
       const filtered = events
         ?.flatMap((event) => [
-          { type: 'event', name: event?.name ?? '', _id: event?._id ?? '' },
-          { type: 'site', name: event?.site?.name ?? '', _id: event?.site?._id ?? '' },
+          { type: 'event', name: event?.name ?? '', _id: event?._id ?? '' ,site_name:event?.site?.name ,location: event?.site?.location},
+          { type: 'site', name: event?.site?.name ?? '', _id: event?.site?._id ?? '' ,location: event?.site?.location},
         ])
         .filter((suggestion) => {
           const isUnique = !uniqueSuggestions.has(suggestion.name.toLowerCase());
@@ -390,8 +390,14 @@ const SearchSection = () => {
             </CButton>
           </div>
 
-            {search && filteredSuggestions.length > 0 && (
-              <ul className="list-group position-absolute">
+          {search && filteredSuggestions.length > 0 && (
+              
+              <ul className="list-group position-absolute input-with-icon">
+                              <img
+                src={location_pin_blackIcon}
+                alt="Location Pin"
+                className="input-icon" // Add a class for styling
+              />
                 {filteredSuggestions.map((suggestion) => (
                   <li
                     key={suggestion._id + suggestion.type}
@@ -399,8 +405,14 @@ const SearchSection = () => {
                     onClick={() => handleSelect(suggestion)}
                     style={{ cursor: 'pointer' }}
                   >
-                    {suggestion.name} ({suggestion.type === 'site' ? 'Club' : 'Event'})
+                    {suggestion.type === 'site' ? suggestion.name : suggestion.site_name} 
+                    <br>
+                    </br>
+                    <div className='locationgray'>
+                    {suggestion.location}
+                    </div>
                   </li>
+                  
                 ))}
               </ul>
             )}
