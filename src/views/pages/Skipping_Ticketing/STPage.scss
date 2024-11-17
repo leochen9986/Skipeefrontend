@@ -88,8 +88,8 @@
 
 @media (max-width: 768px) { /* Adjust breakpoint for mobile screens */
   .no-event-container {
-    width: 100vw; /* Full width of the viewport on mobile */
-    padding: 0 10px; /* Optional padding for better appearance */
+    width: 100%; /* Full width of the viewport on mobile */
+    // padding: 0 10px; /* Optional padding for better appearance */
   }
 }
 

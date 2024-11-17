@@ -18,7 +18,7 @@ import navigation from '../_nav'
 import { AuthApiController } from '../api/AuthApiController'
 import './AppSidebar.css'
 
-const AppSidebar = ({ isVisible }) => {
+const AppSidebar = ({ isVisible,onToggleSidebar }) => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
@@ -43,8 +43,8 @@ const AppSidebar = ({ isVisible }) => {
 
   const onNavLinkClick = () => {
     if (isMobile) {
-      setSidebarWidth('0px')
-      setSidebarMargin('-20px')
+      // setSidebarWidth('0px')
+      // setSidebarMargin('-20px')
     }
   }
 
@@ -105,7 +105,7 @@ const AppSidebar = ({ isVisible }) => {
         }
       }}
     >
-      <AppSidebarNav items={getFilteredNavigation()} profile={profile} onNavLinkClick={onNavLinkClick} />
+      <AppSidebarNav items={getFilteredNavigation()} profile={profile} onNavLinkClick={onToggleSidebar} />
     </div>
   )
 }

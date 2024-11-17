@@ -12,13 +12,49 @@
   box-sizing: border-box; /* Ensures padding/border doesn't affect width calculation */
 }
 
-/* Single-column layout for mobile view */
+/* Mobile View (Single Column) */
 @media (max-width: 768px) {
   .venue-card {
     flex: 1 1 100%; /* Full width for mobile view */
-    max-width: 80%; /* Prevent any overflow on mobile */
+    max-width: 100%;
   }
+
   .venue-card-main {
-    width:100vw
+    width: 100%; /* Ensure full container width on mobile */
   }
+
+  .pagination {
+    flex-wrap: wrap; /* Allow pagination buttons to wrap */
+    justify-content: center;
+    gap: 8px;
+  }
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.page-item {
+  margin: 0 5px;
+}
+
+.page-link {
+  padding: 8px 12px;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.page-link:hover {
+  background-color: #ddd;
+}
+
+.active .page-link {
+  background-color: #4caf50;
+  color: white;
 }

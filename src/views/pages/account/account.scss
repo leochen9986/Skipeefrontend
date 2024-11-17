@@ -156,3 +156,129 @@
     color: rgb(255, 255, 255) !important; 
   }
   
+
+  @media (max-width: 768px) {
+    .title-bold {
+      font-size: 24px;
+      width: 100%;
+      text-align: center; /* Center align the title */
+    }
+  
+    .paper {
+      padding: 10px;
+    }
+  
+    .tab-color {
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      font-size: 14px; /* Smaller font for tabs */
+    }
+  
+    .image-container {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+  
+    .image-upload-box {
+      margin-top: 10px;
+    }
+  
+    .setting-label {
+      font-size: 14px;
+      width:100%;
+    }
+  
+    .setting-input,
+    .setting-input-confirm {
+      font-size: 14px !important;
+      padding: 8px;
+    }
+  
+    .table-header-cell,
+    .table-data-cell {
+      font-size: 12px;
+      padding: 8px !important;
+    }
+  
+    .dashboard-button {
+      width: 100% !important;
+      padding: 10px !important;
+    }
+  
+    .status-badge {
+      font-size: 10px;
+      padding: 3px 5px;
+    }
+  
+    .table-header-cell-end {
+      padding: 10px !important;
+    }
+  
+    .setting-btn {
+      right: 5px;
+    }
+  
+    .ticket-table {
+      font-size: 12px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .title-bold {
+      font-size: 20px;
+    }
+  
+    .table-header-cell,
+    .table-data-cell {
+      font-size: 10px;
+    }
+  
+    .setting-input,
+    .setting-input-confirm {
+      font-size: 12px !important;
+    }
+  
+    .dashboard-button {
+      font-size: 12px !important;
+    }
+  
+    .tab-color {
+      font-size: 12px !important;
+    }
+  }
+
+
+  @media (max-width: 768px) {
+    .table-responsive {
+      overflow-x: auto; // Enable horizontal scrolling
+      -webkit-overflow-scrolling: touch; // Smooth scrolling for touch devices
+    }
+  
+    .table-header-cell,
+    .table-data-cell {
+      font-size: 14px; // Reduce font size
+      padding: 10px;
+      text-align: center;
+    }
+  
+    .table-header-cell {
+      white-space: nowrap; // Prevent header text from wrapping
+    }
+  
+    .table-data-cell {
+      white-space: nowrap;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .table-header-cell,
+    .table-data-cell {
+      font-size: 12px; // Further reduce font size for smaller devices
+      padding: 8px;
+    }
+  
+    .dashboard-button {
+      width: 100%; // Buttons span the full width on small screens
+    }
+  }

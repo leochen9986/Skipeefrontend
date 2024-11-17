@@ -342,7 +342,7 @@ const AdminAccountTab = ({ siteId }) => {
       </CButton> */}
 
       <br />
-      <div style={{backgroundColor:'#ddd',borderRadius: '8px',}}>
+      <div className="table-responsive">
       <CTable
           style={{
             border: '1px solid #ddd',
