@@ -126,7 +126,9 @@ const Search = () => {
           )}
         
       </div>
+      <div className='footercontent'>
       <AppFooter />
+      </div>
     </>
   )
 }

@@ -164,7 +164,7 @@ const TicketPopup = ({ tickets, onClose, onProceed, event }) => {
   return (
     <div className="ticket-popup-overlay">
       <div className="ticket-popup">
-        <h2>Select a Ticket</h2>
+        <h2>Select a Tisscket</h2>
         <div className="ticket-list">
           {tickets
             .filter(
