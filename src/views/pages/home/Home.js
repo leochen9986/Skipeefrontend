@@ -156,35 +156,34 @@ const HeroSection = () => {
     const venuApiController = new VenuApiController();
     try {
       const response = await venuApiController.getAllEvents({ ...query, status: "upcoming" });
-      
-      // Get current time in minutes since midnight
-      const now = new Date();
-      const currentTime = now.getHours() * 60 + now.getMinutes();
-
-      // Filter events based on `startTime` and `endTime`
+  
+      // Get the current timestamp
+      const currentTimestamp = Date.now();
+  
+      // Filter events based on `salesStartTime` and `salesEndTime`
       const filteredEvents = response.filter(event => {
-        const [startHour, startMinute] = event.startTime.split(":").map(Number);
-        const [endHour, endMinute] = event.endTime.split(":").map(Number);
-
-        const startMinutes = startHour * 60 + startMinute;
-        const endMinutes = endHour * 60 + endMinute;
-
-        // Check if the current time is within the event's time range
-        if (endMinutes < startMinutes) {
-          // Handle overnight events
-          return currentTime >= startMinutes || currentTime <= endMinutes;
+        if (!event.tickets[0] || !event.tickets[0].saleStartTime || !event.tickets[0].saleEndTime) {
+          return false; // Skip events without ticket sales time information
+        }
+  
+        const salesStartTimestamp = new Date(event.tickets[0].saleStartTime).getTime();
+        const salesEndTimestamp = new Date(event.tickets[0].saleEndTime).getTime();
+  
+        // Check if the current timestamp is within the ticket sales time range
+        if (salesEndTimestamp < salesStartTimestamp) {
+          // Handle overnight sales (salesEndTime is past midnight)
+          return currentTimestamp >= salesStartTimestamp || currentTimestamp <= salesEndTimestamp;
         } else {
-          // Regular time range
-          return currentTime >= startMinutes && currentTime <= endMinutes;
+          // Regular sales time range
+          return currentTimestamp >= salesStartTimestamp && currentTimestamp <= salesEndTimestamp;
         }
       });
-
+  
       setEvents(filteredEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
     }
   };
-
   useEffect(() => {
     // Call getAllEvents with the search query as soon as debouncedSearch updates
     if (debouncedSearch) {

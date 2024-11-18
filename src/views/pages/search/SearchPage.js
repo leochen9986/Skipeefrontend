@@ -61,29 +61,28 @@ const Search = () => {
   
       const res = await new VenuApiController().getAllEvents(filter);
   
-      // Get the current date and time
-      const now = new Date();
-      const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert current time to minutes since midnight
+      // Get the current timestamp
+      const currentTimestamp = Date.now();
   
-      // Filter events based on `status`, `startTime`, and `endTime`
+      // Filter events based on `ticket.salesStartTime` and `ticket.salesEndTime`
       const filteredResults = res.filter(event => {
-        const [startHour, startMinute] = event.startTime.split(":").map(Number);
-        const [endHour, endMinute] = event.endTime.split(":").map(Number);
+        if (!event.tickets[0] || !event.tickets[0].saleStartTime || !event.tickets[0].saleEndTime) {
+          return false; // Skip events without ticket sales information
+        }
+        console.log(event.tickets[0] );
+        const salesStartTimestamp = new Date(event.tickets[0].saleStartTime).getTime();
+        const salesEndTimestamp = new Date(event.tickets[0].saleEndTime).getTime();
   
-        // Convert start and end times to minutes since midnight
-        const startMinutes = startHour * 60 + startMinute;
-        const endMinutes = endHour * 60 + endMinute;
-  
-        // Check if current time is within the event time range
-        if (endMinutes < startMinutes) {
-          // Handle overnight events (e.g., start at 22:00 and end at 02:00)
-          return currentTime >= startMinutes || currentTime <= endMinutes;
+        // Check if current timestamp is within the ticket sales time range
+        if (salesEndTimestamp < salesStartTimestamp) {
+          // Handle overnight sales (e.g., sales start at 22:00 and end at 02:00)
+          return currentTimestamp >= salesStartTimestamp || currentTimestamp <= salesEndTimestamp;
         } else {
-          // Regular time range
-          return currentTime >= startMinutes && currentTime <= endMinutes;
+          // Regular sales time range
+          return currentTimestamp >= salesStartTimestamp && currentTimestamp <= salesEndTimestamp;
         }
       });
-  
+      console.log(filteredResults);
       setResults(filteredResults);
     } catch (error) {
       console.error('Error fetching results:', error);
@@ -299,8 +298,27 @@ const SearchSection = () => {
     const venuApiController = new VenuApiController();
     try {
       const response = await venuApiController.getAllEvents({ ...query, status: "upcoming" });
+      const currentTimestamp = Date.now();
+      const filteredEvents = response.filter(event => {
+        if (!event.tickets[0] || !event.tickets[0].saleStartTime || !event.tickets[0].saleEndTime) {
+          return false; // Skip events without ticket sales time information
+        }
+  
+        const salesStartTimestamp = new Date(event.tickets[0].saleStartTime).getTime();
+        const salesEndTimestamp = new Date(event.tickets[0].saleEndTime).getTime();
+  
+        // Check if the current timestamp is within the ticket sales time range
+        if (salesEndTimestamp < salesStartTimestamp) {
+          // Handle overnight sales (salesEndTime is past midnight)
+          return currentTimestamp >= salesStartTimestamp || currentTimestamp <= salesEndTimestamp;
+        } else {
+          // Regular sales time range
+          return currentTimestamp >= salesStartTimestamp && currentTimestamp <= salesEndTimestamp;
+        }
+      });
+      
       console.log(response);
-      setEvents(response);
+      setEvents(filteredEvents);
     } catch (error) {
       console.error("Error fetching events:", error);
     }
