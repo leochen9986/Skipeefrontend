@@ -34,19 +34,19 @@ const benefits = [
     icon: <img src={RGIcon} alt="Revenue Generation" width="90" />,
     title: 'Revenue Generation',
     description:
-      'Partnering with us, allows your business to generate greater profits with our comprehensive fast-track ticketing solution',
+      'Partnering with us boosts your profits through seamless, fast-track access—elevating guest experience and maximizing efficiency.',
   },
   {
     icon: <img src={EIIcon} alt="Easy Integration" width="90" />,
     title: 'Easy Intregreation',
     description:
-      'Skipee works alongside other ticketing companies can either be used primarily for fast track tickets or an all in one ticketing platform',
+      'Skipee integrates effortlessly with existing ticketing systems, offering a flexible solution that can serve as a dedicated fast-track platform.',
   },
   {
     icon: <img src={UFPIcon} alt="User Friendly Platform" width="90" />,
     title: 'User Friendly Platform',
     description:
-      'Skipee allows clubs to easily create, customize and manage ticket sales for your events',
+      'Skipee enables clubs to seamlessly create, customize, and manage event access for all your occasions.',
   },
 ]
 
@@ -363,9 +363,9 @@ const AboutUsDiv = () => {
             <div className='about-text'>
               <h2 className="fw-bold mb-3 mt-5">Intuitive Comprehensive Efficient Dashboard</h2>
               <p className="text-center">
-                With user-friendly navigation, a rich suite of tools including real-time analytics, 
-                attendee tracking, and seamless marketing integration, clubs can optimize attendee 
-                flow and maximize revenue with ease.
+              With user-friendly navigation and a powerful suite of tools
+              including real-time analytics and attendee tracking, clubs
+              can effortlessly optimize guest flow and maximize revenue.
               </p>
             </div>
             <div className="about-img d-flex justify-content-center" style={{ maxWidth: '100%', height: 'auto' }}>
@@ -383,9 +383,8 @@ const AboutUsDiv = () => {
             <div className='about-text'>
               <h2 className="fw-bold mb-3 mt-5">Revenue Split Pricing</h2>
               <p className="text-center">
-                Experience the freedom of No minimum contract length, No cancellation fees, 
-                and No setup costs. Instead benefit from a revenue share on every queue skip 
-                sold, with x% going directly to you.
+              Enjoy complete flexibility—no minimum contract, no cancellation fees,
+              and zero setup costs. 
               </p>
             </div>
             <div className="about-img d-flex justify-content-center" style={{ maxWidth: '100%', height: 'auto' }}>
