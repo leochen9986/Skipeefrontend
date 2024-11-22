@@ -164,7 +164,7 @@ const Register = () => {
             <div >
               <h3 className="input-lbl-re">Email</h3>
               <CFormInput
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
                 value={email}
                 placeholder="Enter your email address"
                 autoComplete="username"
