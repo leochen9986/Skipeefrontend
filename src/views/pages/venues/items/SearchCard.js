@@ -111,6 +111,7 @@ const SearchCard = ({ event}) => {
       // Get the current date and time
       const now = new Date();
       const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert current time to minutes since midnight
+      const currentTimestamp = Date.now();
   
       // Filter events based on `status`, `startTime`, and `endTime`
       const filteredResults = res.filter(event => {
