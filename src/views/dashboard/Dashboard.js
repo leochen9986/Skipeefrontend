@@ -211,7 +211,7 @@ const Dashboard = ({ site,  showTitle = true  }) => {
       {showTitle && (
       <div className="title-bold">Dashboard Overview</div>
       )}
-      <div style={{ width: '100%', display: 'flex', justifyContent: showTitle ? 'flex-end' : 'center', position: 'relative' }}>
+      <div style={{ marginLeft:"10px", width: '80%', display: 'flex', justifyContent: showTitle ? 'flex-end' : 'center', position: 'relative' }}>
       <PageTopBar
         picker={true}
         startDate={startDate}

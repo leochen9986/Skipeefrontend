@@ -311,7 +311,7 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
                   style={{ padding: '5px', maxWidth: '50px', height: 'auto', display: 'block', margin: '0 auto' }} 
                 />
                 <h3 className="ticket-name" style={{ padding: '5px', margin: '0' }}>{ticket.name}</h3>
-                <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '5px 0' }} />
+                {/* <hr /> */}
                 <p style={{ padding: '5px', margin: '0' }}>
                   <ViewTicketPrice amount={ticket.price} site={event.site} />
                 </p>
@@ -327,7 +327,7 @@ const TicketPopup = ({ tickets, onClose, onProceed,event }) => {
               </div>
             ))}
         </div>
-        <div className="popup-buttons" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="popup-buttons2">
           <CButton
             className="custom-button-analytics"
             color="primary"

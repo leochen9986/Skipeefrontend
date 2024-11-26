@@ -15,7 +15,7 @@
   left: 0;
   right: 0;
   height: 15%; /* Covers 10% of the height */
-  background-color: #EDEDEE; /* Grey background color */
+  background-color: #ffffff; /* Grey background color */
   z-index: 0; /* Ensure this is behind the image and text */
 }
 

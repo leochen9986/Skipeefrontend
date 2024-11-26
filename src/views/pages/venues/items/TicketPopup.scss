@@ -1,85 +1,94 @@
 .ticket-popup-overlay {
-  width: 100%; /* Set width to full screen */
-  height: 100vh; /* Optional: Set height to full viewport height */
-  position: fixed; /* Optional: Make it fixed to the viewport */
-  top: 0; /* Position at the top */
-  left: 0; /* Position at the left */
-  background: rgba(0, 0, 0, 0.5); /* Optional: Add a background overlay */
-}
-.ticket-list {
-  display: flex;
-  overflow: hidden; 
-  padding: 10px; // Existing padding for ticket-list
-  width: 100%;
-  height: 100%; 
-  align-items: center;
+  width: 100%; /* Full screen width */
+  height: 100vh; /* Full viewport height */
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+  display: flex; /* Use flex to center the popup */
   justify-content: center;
+  align-items: center;
+  overflow-y: hidden;
 }
 
 .ticket-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%; /* Full width */
+  max-width: 900px; /* Limit width */
+  max-height: 80vh; /* Limit height to prevent overflow */
+  overflow-y: hidden; /* Add vertical scrolling if content exceeds max height */
+}
 
-  flex-direction: column; 
-  align-items: center; 
-  background: white; 
-  padding: 20px; 
-  border-radius: 10px; 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-  max-width: 60%; /* Adjusted max-width for better mobile compatibility */
-  width: 100%; 
+.ticket-list {
+  display: flex;
+  flex-wrap: wrap; /* Wrap items within the list */
+  gap: 10px; /* Add spacing between tickets */
+  justify-content: center; /* Center align the ticket items */
+  padding: 10px;
+  overflow-y: hidden;
 }
 
 .ticket-item {
-  flex: 0 0 auto; 
-  margin-right: 10px; 
-  border: 1px solid #ddd; 
-  border-radius: 5px; 
-  min-width: 120px; 
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
-  transition: background-color 0.3s; 
-  display: flex; 
-  flex-direction: column; 
-  justify-content: center; 
-  padding: 10px; // Existing padding for ticket-item
-  height: auto; 
+  flex: 1 1 45%; /* Set the ticket to take 45% of the container width */
+  max-width: 45%; /* Ensure ticket doesn't exceed 45% width */
+  height: auto; /* Allow auto height adjustment */
+  margin: 5px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  transition: background-color 0.3s;
 
-  // Adjust padding for mobile
-  @media (max-width: 768px) {
-    padding: 5px; // Reduced padding for mobile
+  img {
+    max-width: 50px; /* Limit the size of the ticket icon */
+    height: auto;
+    margin: 0 auto 10px; /* Center align and add bottom spacing */
   }
 }
 
-// Existing media query styles
-@media (max-width: 768px) {
-  .ticket-popup {
-    padding: 10px; /* Reduced padding for mobile */
-    min-width: 100%;
-    max-width: 100%; 
+.popup-buttons2 {
+  display: flex;
+  justify-content: space-between; /* Distribute buttons evenly */
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px; /* Add spacing between buttons */
 
+  button,
+  .custom-button-analytics {
+    width: 49%; /* Ensure buttons take half the width */
+    border-radius: 30px; /* Rounded corners for buttons */
+    padding: 10px; /* Add padding inside buttons */
+  }
+}
+
+@media (max-width: 768px) {
+
+
+  .ticket-popup {
+    margin-bottom: 25%;;
+    width: 90%; /* Adjust width for mobile */
+    padding: 15px; /* Reduce padding for mobile */
+    height: fit-content;
+    border-radius: 30px;
   }
 
   .ticket-item {
-    max-height: 230px; 
-    margin-right: 5px; 
+    flex: 1 1 100%; /* Full width for ticket items on mobile */
+    max-width: 100%; /* Ensure no overflow */
   }
 
-  .ticket-item img {
-    max-width: 50%; 
-    height: auto; 
+  .popup-buttons2 {
+    margin-top: 10%px;
+    flex-direction: row; /* Stack buttons vertically */
+    gap: 15px; /* Add spacing between stacked buttons */
   }
 
-  .popup-buttons {
-    flex-direction: column; 
-    align-items: stretch; 
+  .popup-buttons2 button,
+  .popup-buttons2 .custom-button-analytics {
+    width: 100%; /* Full width for buttons on mobile */
   }
-
-  .popup-buttons button,
-  .popup-buttons .custom-button-analytics {
-    width: 100%; 
-    margin-bottom: 10px; 
-  }
-}
-.ticket-header {
-  text-align: center; /* Center align the text */
-  font-weight: bold; /* Ensure the text is bold */
-  margin: 0; /* Remove any default margin */
 }

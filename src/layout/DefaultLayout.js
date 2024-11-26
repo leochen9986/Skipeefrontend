@@ -5,7 +5,7 @@ import './DefaultLayout.css';
 
 const DefaultLayout = () => {
   const nav = useNavigate();
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   const checkAuthentication = async () => {
     const token = localStorage.getItem('skipee_access_token');

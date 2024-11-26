@@ -135,7 +135,7 @@ const EventBooking = () => {
       <UserHeader />
       </div>
       <div className="event-booking" style={{ border: '1px solid #E2E2E3', borderRadius: '20px', position: 'relative' }}>
-      <div className="background-overlay"></div>
+      <div></div>
         <div>
           {/* <div
             style={{
@@ -155,7 +155,7 @@ const EventBooking = () => {
             <img 
               src={event.image} 
               alt={event.name} 
-              style={{ height: '15%', width: '15%', margin: '5% 2% 3% 2%', position: 'relative', zIndex: 1 }} 
+              style={{ height: '45%', width: '45%', margin: '5% 2% 3% 2%', position: 'relative', zIndex: 1 }} 
             />
             <h1 style={{ zIndex: 1, position: 'relative' }}>{event.name}</h1>
           </div>

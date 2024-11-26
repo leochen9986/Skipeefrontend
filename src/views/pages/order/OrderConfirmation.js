@@ -97,13 +97,13 @@ const OrderConfirmation = () => {
       <UserHeader />
       </div>
       <div className="event-booking" style={{ border: '1px solid #E2E2E3', borderRadius: '20px', position: 'relative' }}>
-      <div className="background-overlay-10"></div>
+      <div ></div>
         <div>
           <div style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <img 
               src={ticket?.eventTicket?.event?.image}
               alt={ticket?.eventTicket?.event?.name}
-              style={{ height: '15%', width: '15%', margin: '5% 2% 1% 2%', position: 'relative', zIndex: 1 }} 
+              style={{ height: '45%', width: '45%', margin: '5% 2% 1% 2%', position: 'relative', zIndex: 1 }} 
             />
             <h1 style={{ zIndex: 1, position: 'relative' }}>{ticket?.eventTicket?.event?.name}</h1>
           </div>
