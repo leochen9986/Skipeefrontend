@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 const AppFooter = () => {
   return (
-    <CFooter className="px-4 text-white" style={{backgroundColor:'#1DB954'}}>
+    <CFooter className="app-footer " style={{backgroundColor:'#1DB954'}}>
       <CContainer className="d-flex space-between">
         <div>
           <a href="#" target="_blank" rel="noopener noreferrer">

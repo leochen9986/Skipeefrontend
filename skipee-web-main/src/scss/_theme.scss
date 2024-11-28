@@ -48,7 +48,7 @@ body {
 }
 
 .footer {
-  min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
+  min-height: 20px; // stylelint-disable-line function-disallowed-list
 }
 
 @if $enable-dark-mode {
@@ -61,4 +61,10 @@ body {
       --cui-footer-bg: var(--cui-body-bg);
     }
   }
+}
+
+@media (max-width: 768px) {
+
+
+  
 }

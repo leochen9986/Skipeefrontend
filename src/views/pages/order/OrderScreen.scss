@@ -24,6 +24,27 @@
   }
 }
 
+/* Wrapper for the search, sort, and date picker */
+.search-sort-container {
+  display: flex;
+  flex-wrap: wrap; /* Enable wrapping for mobile view */
+  justify-content: space-between;
+  gap: 10px; /* Add spacing between elements */
+  align-items: center;
+}
+
+.search-container-order {
+  flex: 1; /* Allow the search bar to take up available space */
+}
+
+.sort-container {
+  flex: 1; /* Allow the sort dropdown to take up available space */
+}
+
+.date-picker-container {
+  flex: 1; /* Allow the date picker to take up available space */
+}
+
 
 .event-info {
   display: flex;
@@ -129,3 +150,22 @@
 
 
 
+/* Adjust layout for mobile view */
+@media (max-width: 768px) {
+  .search-sort-container {
+    flex-direction: column; /* Stack elements vertically */
+    align-items: stretch; /* Stretch elements to full width */
+  }
+
+  .search-container-order,
+  .sort-container,
+  .date-picker-container {
+    width: 100%; /* Ensure full width for all elements */
+  }
+
+  .title-bold {
+    width: 100%; /* Make the title span full width */
+    text-align: center; /* Center-align the title text */
+    margin-bottom: 10px; /* Add some space below the title */
+  }
+}

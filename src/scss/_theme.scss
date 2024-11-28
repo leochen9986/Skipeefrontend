@@ -1,5 +1,6 @@
 body {
   background-color: var(--cui-tertiary-bg);
+  overflow-x: hidden;
 }
 
 .wrapper {
@@ -46,7 +47,13 @@ body {
 .header > .container-fluid + .container-fluid {
   min-height: 3rem;
 }
-
+.app-footer {
+  color:white;
+  width: 100%; /* Make it span the full width */
+  text-align: center; /* Center-align text within */
+  line-height: 15px; /* Match the height to vertically align text */
+  font-size: 15px; /* Adjust font size as needed */
+}
 .footer {
   min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
 }
@@ -62,3 +69,17 @@ body {
     }
   }
 }
+
+@media (max-width: 768px) {
+
+  .app-footer {
+    color:white;
+    width: 100%; /* Make it span the full width */
+    text-align: center; /* Center-align text within */
+    line-height: 15px; /* Match the height to vertically align text */
+    font-size: 10px; /* Adjust font size as needed */
+    height: 12px;
+  }
+  
+}
+

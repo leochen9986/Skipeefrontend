@@ -98,64 +98,76 @@ const IncidentReportsPage = ({ profile }) => {
 
   return (
     <>
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', padding: '20px' }}>
-        <div className="title-bold">Incident Reports</div>
-        <div style={{ display: 'flex', alignItems: 'right', justifyContent: 'flex-end', gap: '20px', width: '100%' }}>
-          <div style={{ position: 'relative', width: '40%' }}>
-            <CFormInput
-              type="text"
-              style={{
-                backgroundColor: '#EDEDEE',
-                border: 'none',
-                borderRadius: '50px',
-                color: '#909094',
-                paddingLeft: '3%',
-                paddingRight: '40px',
-                height: '40px',
-                width: '100%',
-                fontSize: '15px',
-                fontWeight: '500',
-              }}
-              placeholder="Search by Name"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              autoComplete="off"
-              className="input-comp custom-search-icon"
-            />
-          </div>
+<div style={{ width: '100%', padding: '20px' }}>
+  <div className="title-bold">Incident Reports</div>
 
-          {/* Sort Dropdown */}
-          <div style={{ width: '10%', position: 'relative' }}>
-            <CFormSelect
-              style={{
-                backgroundColor: '#EDEDEE',
-                border: 'none',
-                borderRadius: '50px',
-                color: '#909094',
-                paddingLeft: '10%',
-                paddingRight: '30px',
-                height: '40px',
-                width: '100%',
-                fontSize: '15px',
-                fontWeight: '500',
-                appearance: 'none',
-              }}
-              aria-label="Sort"
-              value={sortOption}
-              onChange={handleSortChange}
-              className="input-comp custom-select-icon"
-            >
-              <option value="">Sort</option>
-              <option value="nameAsc">Name (A-Z)</option>
-              <option value="nameDesc">Name (Z-A)</option>
-              <option value="dateAsc">Date (Oldest First)</option>
-              <option value="dateDesc">Date (Newest First)</option>
-            </CFormSelect>
-          </div>
+  {/* Container for search, sort, and date picker */}
+  <div className="search-sort-container">
+    {/* Search Bar */}
+    <div className="search-container-order">
+      <CFormInput
+        type="text"
+        style={{
+          backgroundColor: '#EDEDEE',
+          border: 'none',
+          borderRadius: '50px',
+          color: '#909094',
+          paddingLeft: '3%',
+          paddingRight: '40px',
+          height: '40px',
+          width: '100%',
+          fontSize: '15px',
+          fontWeight: '500',
+        }}
+        placeholder="Search by Name"
+        value={searchQuery}
+        onChange={handleSearchChange}
+        autoComplete="off"
+        className="input-comp custom-search-icon"
+      />
+    </div>
 
-          <PageTopBar startDate={startDate} endDate={endDate} setDateRange={setDateRange} picker={true} currentPage="orders" />
-        </div>
-      </div>
+    {/* Sort Dropdown */}
+    <div className="sort-container">
+      <CFormSelect
+        style={{
+          backgroundColor: '#EDEDEE',
+          border: 'none',
+          borderRadius: '50px',
+          color: '#909094',
+          paddingLeft: '10%',
+          paddingRight: '30px',
+          height: '40px',
+          width: '100%',
+          fontSize: '15px',
+          fontWeight: '500',
+          appearance: 'none',
+        }}
+        aria-label="Sort"
+        value={sortOption}
+        onChange={handleSortChange}
+        className="input-comp custom-select-icon"
+      >
+        <option value="">Sort</option>
+        <option value="nameAsc">Name (A-Z)</option>
+        <option value="nameDesc">Name (Z-A)</option>
+        <option value="dateAsc">Date (Oldest First)</option>
+        <option value="dateDesc">Date (Newest First)</option>
+      </CFormSelect>
+    </div>
+
+    {/* Date Picker */}
+    <div className="date-picker-container">
+      <PageTopBar
+        startDate={startDate}
+        endDate={endDate}
+        setDateRange={setDateRange}
+        picker={true}
+        currentPage="orders"
+      />
+    </div>
+  </div>
+</div>
 
       <CContainer>
         <CRow>
