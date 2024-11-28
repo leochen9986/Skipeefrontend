@@ -94,23 +94,31 @@ const App = () => {
           <Route path="*" name="Home" element={<DefaultLayout />} />
         </Routes>
       </Suspense>
-      <ToastContainer 
-        limit={3}  // Only 3 toasts visible at a time
-        autoClose={3000}  // Optional: auto-close after 5 seconds
-        pauseOnHover 
+      <ToastContainer
+        position="bottom-center" // Mobile-friendly position
+        limit={3} // Show a maximum of 3 toasts at once
+        autoClose={3000} // Auto-close toasts after 3 seconds
+        hideProgressBar={false} // Show the progress bar
+        newestOnTop={true}
+        closeOnClick
+        pauseOnHover
+        draggable
+        style={{
+          zIndex: 10000, // Ensure the toast appears on top of all elements
+        }}
       />
     </HashRouter>
   )
 }
 
 function ScrollToTop() {
-  const { pathname } = useLocation()
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [pathname])
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scroll to top
+  }, [pathname]);
 
-  return null
+  return null;
 }
 
 export default App
