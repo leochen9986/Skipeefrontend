@@ -165,7 +165,7 @@ const SettingsTab = ({ profile }) => {
   }, [profile]);
 
   return (
-    <CForm className="w-50 px-4">
+    <CForm className="dynamic-form-width px-4">
       <div>
       <div className="image-container">
           <CImage src={imageUrl} fluid style={{ maxWidth: '100px', maxHeight: '100px' }} />

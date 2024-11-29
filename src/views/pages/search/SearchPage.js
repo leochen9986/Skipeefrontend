@@ -35,7 +35,7 @@ const Search = () => {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(true)
   const location = useLocation()
-
+  const [menuVisible, setMenuVisible] = useState(false); // Add menuVisible state
   useEffect(() => {
     const searchTerm = new URLSearchParams(location.search).get('search')
     const siteId = new URLSearchParams(location.search).get('siteId')
@@ -94,9 +94,12 @@ const Search = () => {
   return (
     <>
     <div style={{ height: '65px', width: '100%', backgroundColor: 'white' }}>
-      <UserHeader />
+      <UserHeader 
+              menuVisible={menuVisible} // Pass menuVisible state
+              setMenuVisible={setMenuVisible} // Pass setter function
+      />
     </div>
-    {results.length > 0 && <SearchSection />}
+    {results.length > 0 && <SearchSection setMenuVisible={setMenuVisible} />}
     <div >
 
           {/* <h1>🔍 Search Results: &nbsp; {new URLSearchParams(location.search).get('search')} </h1> */}
@@ -281,7 +284,7 @@ const useDebounce = (value, delay) => {
   return debouncedValue
 }
 
-const SearchSection = () => {
+const SearchSection = ({ setMenuVisible })  => {
   const [search, setSearch] = useState('')
   const [events, setEvents] = useState([])
   const [filteredSuggestions, setFilteredSuggestions] = useState([])
@@ -395,6 +398,7 @@ const SearchSection = () => {
               <CFormInput
                 type="text"
                 value={search}
+                onFocus={() => setMenuVisible(false)}
                 onChange={(e) => {
                   setFilteredSuggestions([]);
                   setSearch(e.target.value);

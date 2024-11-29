@@ -12,6 +12,8 @@ const UserHeader = ({
   isContactInView,
   setIsAboutInView,
   setIsContactInView,
+  menuVisible, // Receive menuVisible state
+  setMenuVisible, // Receive setMenuVisible function
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,7 +45,7 @@ const UserHeader = ({
     };
   }, [setIsAboutInView, setIsContactInView]);
 
-  const [menuVisible, setMenuVisible] = useState(false);
+  // const [menuVisible, setMenuVisible] = useState(false);
 
   const toggleMenu = () => {
     setMenuVisible(!menuVisible);

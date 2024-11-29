@@ -56,6 +56,7 @@ const Home = () => {
   const [isHomeInView, setIsHomeInView] = useState(false);
   const [isAboutInView, setIsAboutInView] = useState(false);
   const [isContactInView, setIsContactInView] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false); // Add menuVisible state
 
   const handleScroll = () => {
     const homeSection = document.getElementById('home-section');
@@ -87,15 +88,17 @@ const Home = () => {
 
   return (
     <div style={{ position: 'relative' }}>
-      <UserHeader 
+      <UserHeader
         isHomeInView={isHomeInView}
         isAboutInView={isAboutInView}
         isContactInView={isContactInView}
-        setIsAboutInView={setIsAboutInView} // Pass the setter as a prop
-        setIsContactInView={setIsContactInView} // Pass the setter as a prop
+        setIsAboutInView={setIsAboutInView}
+        setIsContactInView={setIsContactInView}
+        menuVisible={menuVisible} // Pass menuVisible state
+        setMenuVisible={setMenuVisible} // Pass setter function
       />
       <div id="home-section"  style={{ paddingBottom: '100px'}}>
-        <HeroSection />
+      <HeroSection setMenuVisible={setMenuVisible} /> {/* Pass setMenuVisible */}
         <BenefitsSection />
       </div>
         
@@ -139,7 +142,7 @@ const useDebounce = (value, delay) => {
   return debouncedValue
 }
 
-const HeroSection = () => {
+const HeroSection = ({ setMenuVisible }) => {
   const [search, setSearch] = useState('')
   const [events, setEvents] = useState([])
   const [filteredSuggestions, setFilteredSuggestions] = useState([])
@@ -254,6 +257,7 @@ const HeroSection = () => {
               <CFormInput
                 type="text"
                 value={search}
+                onFocus={() => setMenuVisible(false)}
                 onChange={(e) => {
                   const inputValue = e.target.value;
                   // Remove "=" characters from the input
