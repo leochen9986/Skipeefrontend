@@ -225,3 +225,14 @@
     background-color: #ddd;
     cursor: not-allowed;
   }
+
+  .no-results-image {
+    width: 25%; /* Default for larger screens */
+    height: auto;
+  }
+  
+  @media (max-width: 768px) { /* Mobile view */
+    .no-results-image {
+      width: 50%; /* Set width to 50% for mobile view */
+    }
+  }

@@ -120,7 +120,11 @@ const Search = () => {
               
               {results.length === 0 && (
                 <div className="loader-container" style={{ height: '100%', padding: '10%' }}>
-                <img src={noresultfoundIcon} style={{ width: '25%', height: 'auto' }} alt="No Results Found" />
+                <img
+                  src={noresultfoundIcon}
+                  className="no-results-image"
+                  alt="No Results Found"
+                />
               </div>
 
               )}

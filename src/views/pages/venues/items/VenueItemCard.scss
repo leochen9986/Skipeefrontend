@@ -1,53 +1,30 @@
+.card-footer {
+  display: flex;
+  justify-content: space-between; /* Ensure buttons are evenly spaced horizontally */
+  align-items: center;
+  padding: 10px;
+  background-color: #EDEDEE;
+}
+
+.custom-button-settings,
+.custom-button-analytics,
 .custom-button-archive {
-    background-color: #E31B54;
-    border: none; 
-    transition: background-color 0.3s ease;
-    border-radius:15px;
-    padding: 10px 15px;
-  }
-  
-  .custom-button-archive:hover {
-    background-color: #C5113D; 
-  }
-  
-  .custom-button-analytics {
-    background-color: black;
-    border: none; 
-    transition: background-color 0.3s ease;
-    border-radius:15px;
-    padding: 10px 20px;
-    @media (max-width: 768px) {
-      width: 50%;
-    }
-  }
-  
-  .custom-button-analytics:hover {
-    background-color: rgb(114, 114, 114); 
-  } 
+  border-radius: 15px;
+  padding: 10px 20px;
+}
 
-  @media (max-width: 768px) {
-    .width-mobile{
-      width: 100%;
-    }
-  }
+.custom-button-settings {
+  background-color: #1DB954;
+}
 
-  .custom-button-settings {
-    background-color: #1DB954;
-    border: none; 
-    transition: background-color 0.3s ease;
-    border-radius:15px;
-    padding: 10px 20px;
-    color: white;
+.custom-button-analytics {
+  background-color: black;
+  color: #EDEDEE;
+}
 
-    @media (max-width: 768px) {
-      width: 50%;
-      height: 0%;
-    }
-  }
-  
-  .custom-button-settings:hover {
-    background-color: #22d962; 
-  } 
+.custom-button-archive {
+  background-color: #E31B54;
+}
 
   // Import the image
 $event-background: 'src/assets/icon_svg/event.png';
@@ -95,4 +72,20 @@ $event-background: 'src/assets/icon_svg/event.png';
   background-color: #E8F8EE;
   color: #1DB954;
   border: 1px solid #1DB954;
+}
+
+@media (max-width: 768px) {
+  .card-footer {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 10px; /* Add space between stacked buttons */
+    align-items: center; /* Center the buttons */
+  }
+
+  .custom-button-settings,
+  .custom-button-analytics,
+  .custom-button-archive {
+    width: 90%; /* Make buttons take up most of the width */
+    text-align: center; /* Center-align text */
+  }
 }

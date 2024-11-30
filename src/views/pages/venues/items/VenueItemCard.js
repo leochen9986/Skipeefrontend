@@ -174,43 +174,37 @@ const SingleVenueItem = ({ site }) => {
                   </div>
                 </div>
               </CCardBody>
-              <CCardFooter className="d-flex justify-content-end" style={{ backgroundColor: '#EDEDEE' }}>
-                <div>
-                  <CButton
-                    className="custom-button-settings"
-                    color="success"
-                    onClick={() => {
-                      setPopupTitle(`${site?.name} Settings`);
-                      setPopupVisibleS(true);
-                    }}
-                  >
-                    Setting
-                  </CButton>
-                  &nbsp;
-                  <CButton
-                    className="custom-button-analytics"
-                    color="primary"
-                    onClick={() => {
-                      setPopupTitle(`${site?.name} Analytics`);
-                      setPopupChildrenV(<Dashboard showTitle={false} site={site} />);
-                      setPopupVisibleV(true);
-                    }}
-                  >
-                    View Analytics
-                  </CButton>
-                  &nbsp;
-                  <CButton
-                    className="custom-button-archive"
-                    onClick={() => setShowConfirmModal(true)}
-                  >
-                    <img
-                      src={achiveIcon}
-                      alt="Archive Icon"
-                      style={{ width: '20px', height: '20px', textAlign: 'center' }}
-                    />
-                  </CButton>
-                </div>
-              </CCardFooter>
+              <CCardFooter className="card-footer">
+  <CButton
+    className="custom-button-settings"
+    onClick={() => {
+      setPopupTitle(`${site?.name} Settings`);
+      setPopupVisibleS(true);
+    }}
+  >
+    Setting
+  </CButton>
+  <CButton
+    className="custom-button-analytics"
+    onClick={() => {
+      setPopupTitle(`${site?.name} Analytics`);
+      setPopupChildrenV(<Dashboard showTitle={false} site={site} />);
+      setPopupVisibleV(true);
+    }}
+  >
+    View Analytics
+  </CButton>
+  <CButton
+    className="custom-button-archive"
+    onClick={() => setShowConfirmModal(true)}
+  >
+    <img
+      src={achiveIcon}
+      alt="Archive Icon"
+      style={{ width: '20px', height: '20px' }}
+    />
+  </CButton>
+</CCardFooter>
             </CCard>
           </CCol>
         </CRow>

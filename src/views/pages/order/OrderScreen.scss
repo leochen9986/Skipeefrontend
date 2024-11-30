@@ -169,3 +169,20 @@
     margin-bottom: 10px; /* Add some space below the title */
   }
 }
+
+@media (max-width: 768px) {
+  .order-table input {
+    min-width: 150px; /* Adjust for mobile */
+  }
+
+  .toggle-container {
+    width: 40px; /* Adjust toggle size for mobile */
+    height: 20px;
+  }
+
+  .toggle-slider:before {
+    height: 18px;
+    width: 18px;
+    transform: translateX(20px);
+  }
+}
