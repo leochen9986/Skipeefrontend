@@ -1,5 +1,8 @@
 @import 'src/scss/style.scss';
-
+html, body {
+  overscroll-behavior: none; /* Prevent overscroll in all directions */
+  height: 100%; /* Ensure the body covers the viewport height */
+}
 .login-container {
   display: flex;
   background-color: #d9d9d9;

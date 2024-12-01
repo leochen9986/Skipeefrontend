@@ -100,24 +100,29 @@
     padding: 10px 0px 10px 0px;
   }
 
-  .footer-label{
-    color: #909094;
-    padding: 1% ;
-    
-
-  }
-
-  .footer-content{
-    font-weight: bold;
-    padding: 1%;
-  }
-
   .footer-space {
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    text-align: center; 
-}
+    display: flex;
+    justify-content: space-between; /* Ensure even spacing between label and content */
+    align-items: center; /* Vertically align items */
+    text-align: left;
+    padding: 8px 0; /* Add consistent spacing between rows */
+    gap: 10px; /* Space between label and content */
+  }
+  
+  .footer-label {
+    display: flex; /* Allow icon and text to align side by side */
+    align-items: center; /* Vertically align icon and text */
+    font-size: 1rem; /* Adjust for readability */
+    color: #666; /* Subtle color for labels */
+    gap: 5px; /* Space between the icon and the text */
+  }
+  
+  .footer-content {
+    font-size: 1rem; /* Uniform font size */
+    font-weight: bold; /* Highlight content */
+    color: #333; /* Slightly darker color for visibility */
+    text-align: right; /* Ensure content aligns to the right */
+  }
 
 .card {
   border: 1px solid #ced4da; 
@@ -269,5 +274,20 @@
     width: 50px;
     height: 24px;
     margin-left: 10px; /* Space between the event name and toggle */
+  }
+}
+
+
+@media (max-width: 768px) {
+  .footer-space {
+    flex-direction: row; /* Ensure the label and content remain on the same line */
+    gap: 5px; /* Adjust spacing for smaller screens */
+    padding: 5px 0;
+  }
+  .footer-label {
+    font-size: 1rem; /* Reduce label size for smaller screens */
+  }
+  .footer-content {
+    font-size: 1rem; /* Reduce content size for smaller screens */
   }
 }

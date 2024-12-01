@@ -603,7 +603,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
                     </CRow>
                   </CCardBody>
                   <CCardFooter className="card-footer">
-                    <div style={{ padding: '3% 0px' }}>
+                  <div style={{ padding: '3% 0px' ,width:"100%"}}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span className="footer-label">Date</span>
                         <span className="footer-content">

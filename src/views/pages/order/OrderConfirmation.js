@@ -140,75 +140,85 @@ const OrderConfirmation = () => {
             {ticket?.eventTicket?.name === "Queue Ticket" && <h3>Queue Details</h3>}
             {ticket?.eventTicket?.name === "Skips" && <h3>Skip Details</h3>}
             <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />
-<div style={{ width: '100%', margin: '10px', backgroundColor: 'white' }}> {/* Set background color to white */}
-  <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
-    <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
-        <img src={OC_pplIcon} style={{ width: '7%' }} />
-        <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
-          Number of Guests
+            <div
+                    style={{
+                      width: '100%',
+                      margin: '10px',
+                      backgroundColor: 'white',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center', // Horizontally center the content
+                      justifyContent: 'center', // Vertically center the content
+                    }}
+                  >{/* Set background color to white */}
+    <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
+      <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
+          <img src={OC_pplIcon} style={{ width: '7%' }} />
+          <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
+            Number of Guests
+          </p>
+        </div>
+        <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
+          {ticket && ticket.noOfUser} Person
         </p>
-      </div>
-      <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-        {ticket && ticket.noOfUser} Person
-      </p>
-    </CCol>
-    <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
-        <img src={OC_flagIcon} style={{ width: '7%' }} />
-        <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
-          Event Name
+      </CCol>
+      <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
+          <img src={OC_flagIcon} style={{ width: '7%' }} />
+          <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
+            Event Name
+          </p>
+        </div>
+        <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
+          {ticket?.eventTicket?.event?.name}
         </p>
-      </div>
-      <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-        {ticket?.eventTicket?.event?.name}
-      </p>
-    </CCol>
-  </CRow>
-  <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
-    <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
-        <img src={OC_calendarIcon} style={{ width: '7%' }} />
-        <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
-          Date
+      </CCol>
+    </CRow>
+    <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
+      <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
+          <img src={OC_calendarIcon} style={{ width: '7%' }} />
+          <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
+            Date
+          </p>
+        </div>
+        <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
+          {format(new Date(ticket?.createdAt), 'dd/MM/yyyy')}
+          {/* {ticket?.eventTicket?.event?.endDate
+            ? 'Recurring Event'
+            : format(new Date(ticket?.eventTicket?.event?.date), 'dd/MM/yyyy')} */}
+            
         </p>
-      </div>
-      <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-        {format(new Date(ticket?.createdAt), 'dd/MM/yyyy')}
-        {/* {ticket?.eventTicket?.event?.endDate
-          ? 'Recurring Event'
-          : format(new Date(ticket?.eventTicket?.event?.date), 'dd/MM/yyyy')} */}
-          
-      </p>
-    </CCol>
-    <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
-        <img src={OC_timeIcon} style={{ width: '7%' }} />
-        <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
-          Time
+      </CCol>
+      <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
+          <img src={OC_timeIcon} style={{ width: '7%' }} />
+          <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
+            Time
+          </p>
+        </div>
+        <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
+        {format(new Date(ticket?.createdAt), 'HH:mm')}
+          {/* {ticket?.eventTicket?.event?.startTime} -{' '}
+          {ticket?.eventTicket?.event?.endTime} */}
         </p>
-      </div>
-      <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-      {format(new Date(ticket?.createdAt), 'HH:mm')}
-        {/* {ticket?.eventTicket?.event?.startTime} -{' '}
-        {ticket?.eventTicket?.event?.endTime} */}
-      </p>
-    </CCol>
-  </CRow>
-  <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
-    <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
-        <img src={location_pin_greyIcon} style={{ width: '3%' }} />
-        <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
-          Location
+      </CCol>
+    </CRow>
+    <CRow className="custom-row" style={{ justifyContent: 'center', textAlign: 'center' }}>
+      <CCol className="custom-col-con" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0', height: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', padding: '0' }}>
+          <img src={location_pin_greyIcon} style={{ width: '3%' }} />
+          <p style={{ textAlign: 'center', margin: '0', padding: '0 10px' }}>
+            Location
+          </p>
+        </div>
+        <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
+        {ticket?.eventTicket?.site?.name} - {ticket?.eventTicket?.site?.location}
         </p>
-      </div>
-      <p style={{ color: '#1DB954', textAlign: 'center', margin: '0', padding: '0' }}>
-      {ticket?.eventTicket?.site?.name} - {ticket?.eventTicket?.site?.location}
-      </p>
-    </CCol>
-  </CRow>
-</div>
+      </CCol>
+    </CRow>
+  </div>
 
 
           <hr style={{ border: 'none', borderTop: '2px dashed grey', width: '100%', margin: '10px 0' }} />

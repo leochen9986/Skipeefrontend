@@ -23,9 +23,14 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword)
   }
+  const resetZoom = () => {
+    document.body.style.transform = 'scale(1)';
+    document.body.style.transformOrigin = '0 0';
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    resetZoom();
 
     const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
     if (!email || !emailRegex.test(email)) {

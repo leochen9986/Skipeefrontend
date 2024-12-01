@@ -229,3 +229,14 @@
     ); 
   }
   
+
+  .footer-content {
+    font-size: 14px; /* Smaller font size for mobile */
+    max-width: 100%; /* Ensure it doesn't exceed the container */
+  }
+  
+  @media (max-width: 768px) {
+    .footer-content {
+      font-size: 12px; /* Reduce font size further on smaller screens */
+    }
+  }

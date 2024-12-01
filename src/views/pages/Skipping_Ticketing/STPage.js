@@ -606,7 +606,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
                     </CRow>
                   </CCardBody>
                   <CCardFooter className="card-footer">
-                    <div style={{ padding: '3% 0px' }}>
+                    <div style={{ padding: '3% 0px' ,width:"100%"}}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span className="footer-label">Date</span>
                         <span className="footer-content">
@@ -622,29 +622,30 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
                             </span>
                           </div>
                           <div className="footer-space">
-                            <span className="footer-label">
-                              <img
-                                src={opening_timeIcon}
-                                style={{ height: '13px', width: '13px' }}
-                                alt="Opening Time"
-                              />{' '}
-                              Opening Time
-                            </span>
-                            <span className="footer-content">
-                              {event.startTime} - {event.endTime}
-                            </span>
-                          </div>
-                          <div className="footer-space">
-                            <span className="footer-label">
-                              <img
-                                src={last_entryIcon}
-                                style={{ height: '13px', width: '13px' }}
-                                alt="Last Entry"
-                              />{' '}
-                              Last Entry
-                            </span>
-                            <span className="footer-content">{event.lastEntryTime}</span>
-                          </div>
+                                  <div className="footer-label">
+                                    <img
+                                      src={opening_timeIcon}
+                                      alt="Opening Time Icon"
+                                      style={{ height: '16px', width: '16px' }} /* Adjust icon size */
+                                    />
+                                    Opening Time
+                                  </div>
+                                  <div className="footer-content">
+                                    {event.startTime} - {event.endTime}
+                                  </div>
+                                </div>
+
+                                <div className="footer-space">
+                                  <div className="footer-label">
+                                    <img
+                                      src={last_entryIcon}
+                                      alt="Last Entry Icon"
+                                      style={{ height: '16px', width: '16px' }} /* Adjust icon size */
+                                    />
+                                    Last Entry
+                                  </div>
+                                  <div className="footer-content">{event.lastEntryTime}</div>
+                                </div>
                         </div>
                       )}
 

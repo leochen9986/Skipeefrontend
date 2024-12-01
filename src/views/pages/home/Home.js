@@ -352,7 +352,7 @@ const BenefitsSection = () => {
 const AboutUsDiv = () => {
   return (
     <div>
-      <CRow className="justify-content-center">
+      <CRow className="justify-content-center custom-row">
         <CCol className="text-center">
           <h2 className="fw-bold display-4">
             Clubs on track with <span className="highlight">fast track</span>
@@ -364,12 +364,12 @@ const AboutUsDiv = () => {
             md="5"
             className="custom-col mb-3 d-flex flex-column"
           >
-            <div className='about-text'>
+            <div className="about-text">
               <h2 className="fw-bold mb-3 mt-5">Intuitive Comprehensive Efficient Dashboard</h2>
               <p className="text-center">
-              With user-friendly navigation and a powerful suite of tools
-              including real-time analytics and attendee tracking, clubs
-              can effortlessly optimize guest flow and maximize revenue.
+                With user-friendly navigation and a powerful suite of tools
+                including real-time analytics and attendee tracking, clubs
+                can effortlessly optimize guest flow and maximize revenue.
               </p>
             </div>
             <div className="about-img d-flex justify-content-center" style={{ maxWidth: '100%', height: 'auto' }}>
@@ -384,11 +384,11 @@ const AboutUsDiv = () => {
             md="5"
             className="custom-col mb-3 d-flex flex-column"
           >
-            <div className='about-text'>
+            <div className="about-text">
               <h2 className="fw-bold mb-3 mt-5">Revenue Split Pricing</h2>
               <p className="text-center">
-              Enjoy complete flexibility—no minimum contract, no cancellation fees,
-              and zero setup costs. 
+                Enjoy complete flexibility—no minimum contract, no cancellation fees,
+                and zero setup costs. 
               </p>
             </div>
             <div className="about-img d-flex justify-content-center" style={{ maxWidth: '100%', height: 'auto' }}>
@@ -401,27 +401,23 @@ const AboutUsDiv = () => {
         </CRow>
 
         <div className="d-flex justify-content-center">
-        <CButton
-          href="/#/login"
-          size="sm"
-          color="success text-white"
-          style={{ 
-            borderRadius: '10px', 
-            backgroundColor: '#1DB954', 
-            padding: '1% 2% 1% 2%', 
-            transition: 'background-color 0.3s ease' // Smooth transition for hover
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#17a34a'}  // Darker green on hover
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#1DB954'}  // Original color on leave
-        >
-          Start Skipping At Your Venue
-        </CButton>
-
+          <CButton
+            href="/#/login"
+            size="sm"
+            color="success text-white"
+            style={{ 
+              borderRadius: '10px', 
+              backgroundColor: '#1DB954', 
+              padding: '1% 2% 1% 2%', 
+              transition: 'background-color 0.3s ease' // Smooth transition for hover
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#17a34a'}  // Darker green on hover
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#1DB954'}  // Original color on leave
+          >
+            Start Skipping At Your Venue
+          </CButton>
         </div>
       </CRow>
-
-      <br />
-      <br />
     </div>
   );
 };
