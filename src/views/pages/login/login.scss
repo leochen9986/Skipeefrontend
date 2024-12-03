@@ -2,11 +2,13 @@
 html, body {
   overscroll-behavior: none; /* Prevent overscroll in all directions */
   height: 100%; /* Ensure the body covers the viewport height */
+
 }
 .login-container {
   display: flex;
   background-color: #d9d9d9;
   flex-direction: column; /* Adjusted for responsiveness */
+  overflow: hidden; 
 }
 
 .heading-text {
@@ -94,13 +96,13 @@ html, body {
   @extend .shadow-none;
   height: 23%;
   width: 100%;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: normal;
   border: 1px solid #E2E2E3;
 
   @media (max-width: 768px) {
     height: auto;
-    font-size: 12px;
+    font-size: 16px;
   }
 }
 

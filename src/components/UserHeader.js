@@ -98,13 +98,16 @@ const UserHeader = ({
                   <img src={logo} alt="logo" width="110" className="me-2" />
                 </CNavLink>
 
-                <div
-                  className="menu-toggle d-md-none"
-                  onClick={toggleMenu}
-                  style={{ cursor: 'pointer', paddingLeft: '10px', alignItems: 'center' }}
-                >
-                  &#9776;
-                </div>
+                {/* Conditionally render the toggle menu button */}
+                {location.pathname === '/' && (
+                  <div
+                    className="menu-toggle d-md-none"
+                    onClick={toggleMenu}
+                    style={{ cursor: 'pointer', paddingLeft: '10px', alignItems: 'center' }}
+                  >
+                    &#9776;
+                  </div>
+                )}
               </div>
 
               <div className={`nav-links ${menuVisible ? 'show-menu' : ''}`} style={{ flexGrow: 1 }}>

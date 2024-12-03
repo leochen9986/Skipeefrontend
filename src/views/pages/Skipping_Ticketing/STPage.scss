@@ -291,3 +291,10 @@
     font-size: 1rem; /* Reduce content size for smaller screens */
   }
 }
+
+
+@media (max-width: 768px) {
+  .skipping-title-container {
+    margin-bottom: 20px; /* Add spacing below the title */
+  }
+}

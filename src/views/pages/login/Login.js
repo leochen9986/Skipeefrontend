@@ -78,7 +78,7 @@ const Login = () => {
   }, [])
 
   return (
-    <div className="min-vh-100 parent-block">
+    <div className="min-vh-100 parent-block" style={{overflow:"hidden"}}>
       <div className="d-block d-md-none">
         <UserHeader />
       </div>
