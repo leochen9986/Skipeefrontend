@@ -56,6 +56,14 @@ const STPage = ({ site }) => {
   const [sites, setSites] = useState([]);
   const [activeSiteId, setActiveSiteId] = useState(null); // Currently selected siteId
   
+  const [startDate, setStartDate] = useState(null); // Start date of the range
+  const [endDate, setEndDate] = useState(null); // End date of the range
+
+  const setDateRange = ([start, end]) => {
+    setStartDate(start);
+    setEndDate(end);
+    console.log("Date range updated:", start, end);
+  };
 
   useEffect(() => {
     new AuthApiController().getProfile().then((res) => {
@@ -321,18 +329,17 @@ const STPage = ({ site }) => {
 
   return (
     <>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-start',padding:'20px'}}>
-        <div className='title-bold'>Skipping</div>
-        <div style={{ display: 'flex', alignItems: 'right', justifyContent: 'flex-end', gap:'20px',width: '100%' }}>
-        
-      <PageTopBarST
-        picker={true}
-        // startDate={startDate}
-        // endDate={endDate}
-        // setDateRange={setDateRange}
-        currentPage="dashboard"
-      />
-      </div>
+      <div className="container-wrapper">
+        <div className="title-row">Skipping</div>
+        <div className="top-bar-row">
+          <PageTopBarST
+            picker={true}
+            startDate={startDate}
+            endDate={endDate}
+            setDateRange={setDateRange}
+            currentPage="dashboard"
+          />
+        </div>
       </div>
     <div>
  
@@ -371,7 +378,7 @@ const STPage = ({ site }) => {
                 aria-labelledby={`tab-pane-${tab.key}`}
                 itemKey={tab.key}
               >
-                <EventsTab profile={profile} siteId={tab.siteId} siteIds={sites.map(s => s._id)} />
+                <EventsTab profile={profile} siteId={tab.siteId} siteIds={sites.map(s => s._id)}  startDate={startDate} endDate = {endDate} />
               </CTabPanel>
             ))}
           </CTabContent>
@@ -421,9 +428,9 @@ const STPage = ({ site }) => {
 }
 
 
-const EventsTab = ({ profile, siteId, siteIds }) => {
+const EventsTab = ({ profile, siteId, siteIds ,startDate,endDate}) => {
   const [activeTab, setActiveTab] = useState(1); // Track the active tab
-
+  
   // Prepare the query object
   const query = {
     status: ['upcoming', 'on hold'], 
@@ -445,7 +452,7 @@ const EventsTab = ({ profile, siteId, siteIds }) => {
       <CTabContent>
         <CTabPanel className="py-3" aria-labelledby="all-events-pane" itemKey={1}>
           {profile ? (
-            <AllEventsTab query={{ ...query, status: ['upcoming', 'on hold'] }} profile={profile} siteId={siteId}/>
+            <AllEventsTab query={{ ...query, status: ['upcoming', 'on hold'] }} profile={profile} siteId={siteId}  startDate = {startDate} endDate  = {endDate}/>
           ) : (
             <div style={{ justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
               <CSpinner color="primary" />
@@ -468,11 +475,12 @@ const EventsTab = ({ profile, siteId, siteIds }) => {
 
 
 
-const AllEventsTab = ({ query, profile ,siteId}) => {
+const AllEventsTab = ({ query, profile ,siteId,startDate,endDate}) => {
   const [eventsList, setEventsList] = useState([]);
   const [popupVisibleW, setPopupVisibleW] = useState(false);
   const [popupChildrenW, setPopupChildrenW] = useState(null);
   const [isToggled, setIsToggled] = useState(true);
+  const [filteredEvents, setFilteredEvents] = useState([]); // Filtered events list
 
   const handleAddSkippingClose = () => {
     setPopupVisibleW(false); // Close the Add Skipping modal
@@ -533,6 +541,20 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
     }
   }, [query]);
 
+  useEffect(() => {
+    // Filter events based on date range
+    if (startDate && endDate) {
+      const filtered = eventsList.filter((event) => {
+        const eventDate = new Date(event.date);
+        return eventDate >= new Date(startDate) && eventDate <= new Date(endDate);
+      });
+      setFilteredEvents(filtered);
+    } else {
+      // If no date range is provided, show all events
+      setFilteredEvents(eventsList);
+    }
+  }, [eventsList, startDate, endDate]);
+
   return (
     <>
       {eventsList.length === 0 ? (
@@ -542,7 +564,7 @@ const AllEventsTab = ({ query, profile ,siteId}) => {
       ) : (
         <CContainer fluid className="container-events">
           <CRow className="events-row">
-            {eventsList.map((event, index) => (
+            {filteredEvents.map((event, index) => (
               <CCol md={4} className="events-col" key={index}>
                 <CCard className="mb-3">
                   <CCardBody className="card-body-event">

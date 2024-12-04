@@ -298,3 +298,41 @@
     margin-bottom: 20px; /* Add spacing below the title */
   }
 }
+
+
+.container-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  flex-wrap: wrap; /* Allow wrapping for smaller screens */
+}
+
+.title-row {
+  font-size: 1.5rem;
+  font-weight: bold;
+  flex: 1; /* Ensure it takes up the entire row if needed */
+}
+
+.top-bar-row {
+  flex: 1; /* Ensure it takes up the entire row if needed */
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+}
+
+@media (max-width: 768px) { /* Adjust breakpoint as needed */
+  .container-wrapper {
+    flex-direction: column; /* Stack elements vertically */
+    margin-top: 10px;
+  }
+
+  .title-row {
+    margin-bottom: 10px; /* Add spacing between rows */
+    text-align: left; /* Align title to the left */
+  }
+
+  .top-bar-row {
+    justify-content: center; /* Center align the PageTopBarST */
+  }
+}

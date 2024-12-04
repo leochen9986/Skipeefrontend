@@ -130,7 +130,7 @@ const PageTopBar = ({ startDate, endDate, setDateRange, picker, currentPage }) =
               onChange={(update) => {
                 setTempDateRange(update);
               }}
-              maxDate={new Date()}
+              // maxDate={new Date()}
               minDate={new Date(2024, 1, 1)}
               isClearable={false}
               customInput={<CustomInput currentPage={currentPage} />}
