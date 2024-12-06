@@ -157,9 +157,9 @@ const SettingsTab = ({ profile }) => {
 
   useEffect(() => {
     if (profile) {
-      setName(profile.worksIn.name);
-      setPhone(profile.worksIn.phone);
-      setEmail(profile.worksIn.email);
+      setName(profile.organizerName);
+      setPhone(profile.phone);
+      setEmail(profile.email);
       setImageUrl(profile.worksIn.logo);
     }
   }, [profile]);
