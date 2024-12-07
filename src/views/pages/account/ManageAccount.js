@@ -136,7 +136,7 @@ const SettingsTab = ({ profile }) => {
       async () => {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
         try {
-          await new VenuApiController().uploadLogo(profile.worksIn._id, { logo: downloadURL });
+          await new VenuApiController().uploadUserLogo(profile._id, { logo: downloadURL });
           setImageUrl(downloadURL);  // Update the displayed logo
           toast.success('Logo updated successfully');
         } catch (error) {
@@ -160,7 +160,7 @@ const SettingsTab = ({ profile }) => {
       setName(profile.organizerName);
       setPhone(profile.phone);
       setEmail(profile.email);
-      setImageUrl(profile.worksIn.logo);
+      setImageUrl(profile.logo);
     }
   }, [profile]);
 

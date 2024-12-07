@@ -90,6 +90,10 @@ async getAllEvents(query) {
     return this.apiService.put(`/sites/${siteId}/upload-logo`, logoData);
   }
 
+  uploadUserLogo(userId, logoData) {
+    console.log(logoData);
+    return this.apiService.post(`/users/upload-logo/${userId}`, { logoUrl: logoData["logo"] });
+  }
   getEvent(id) {
     return this.apiService.get('/sites/event/' + id)
   }
